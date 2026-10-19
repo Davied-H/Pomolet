@@ -32,7 +32,7 @@ struct NativeToast: View {
         ZStack(alignment: .topLeading) {
             if let message {
                 let size = bounds(message)
-                Text(message).font(.system(size: 10)).foregroundStyle(palette.ink).multilineTextAlignment(.center).lineSpacing(3)
+                Text(message).font(SwiftUI.Font.system(size: 10)).foregroundStyle(palette.ink).multilineTextAlignment(.center).lineSpacing(3)
                     .frame(width: size.width - 34, height: size.height - 26).padding(.horizontal, 17).padding(.vertical, 13)
                     .background(palette.paper, in: RoundedRectangle(cornerRadius: 12))
                     .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(palette.line, lineWidth: 1))
