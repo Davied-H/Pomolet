@@ -13,8 +13,10 @@ jobs:
       - name: Test behavior, motion and media
         run: ./test.sh
       - name: Build universal app
-        run: ./build.sh
+        run: |
+          ./build.sh
+          ditto -c -k --sequesterRsrc --keepParent dist/Pomolet.app dist/Pomolet-macOS.zip
       - uses: actions/upload-artifact@v4
         with:
           name: Pomolet-macOS
-          path: dist/Pomolet.app
+          path: dist/Pomolet-macOS.zip
