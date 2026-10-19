@@ -1,0 +1,25 @@
+{
+  "checks" : 50,
+  "geometry" : {
+    "content" : [
+      388,
+      418
+    ],
+    "contentOrigin" : [
+      1,
+      1
+    ],
+    "controlsWidth" : 336,
+    "outer" : [
+      390,
+      420
+    ],
+    "runningControlsCenterY" : 375,
+    "settingsAnchor" : [
+      348.5,
+      38
+    ]
+  },
+  "liquid" : "Gaussian3.6 -> alpha19a-9 -> SourceGraphic atop liquid, dark1px stroke",
+  "nativeTimeline" : "matches HTML delays\/durations\/Bezier and interruption samples"
+}

@@ -1,0 +1,20 @@
+name: macOS
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test behavior, motion and media
+        run: ./test.sh
+      - name: Build universal app
+        run: ./build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Pomolet-macOS
+          path: dist/Pomolet.app

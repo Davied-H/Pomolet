@@ -1,0 +1,92 @@
+[
+  {
+    "clip" : "idle",
+    "cornerAlpha" : [
+      1,
+      0,
+      0,
+      0
+    ],
+    "duration" : 21.816666666666666,
+    "fps" : 60,
+    "height" : 720,
+    "opaquePixels" : 20899,
+    "transparentPixels" : 336264,
+    "width" : 540
+  },
+  {
+    "clip" : "focus-adjust",
+    "cornerAlpha" : [
+      1,
+      0,
+      0,
+      0
+    ],
+    "duration" : 15.383333333333333,
+    "fps" : 60,
+    "height" : 720,
+    "opaquePixels" : 20899,
+    "transparentPixels" : 336264,
+    "width" : 540
+  },
+  {
+    "clip" : "short",
+    "cornerAlpha" : [
+      1,
+      0,
+      0,
+      0
+    ],
+    "duration" : 12.5,
+    "fps" : 60,
+    "height" : 720,
+    "opaquePixels" : 20899,
+    "transparentPixels" : 336264,
+    "width" : 540
+  },
+  {
+    "clip" : "short-eyes",
+    "cornerAlpha" : [
+      1,
+      0,
+      0,
+      0
+    ],
+    "duration" : 12.5,
+    "fps" : 60,
+    "height" : 720,
+    "opaquePixels" : 20899,
+    "transparentPixels" : 336264,
+    "width" : 540
+  },
+  {
+    "clip" : "long",
+    "cornerAlpha" : [
+      1,
+      0,
+      0,
+      0
+    ],
+    "duration" : 14.550000000000001,
+    "fps" : 60,
+    "height" : 720,
+    "opaquePixels" : 20899,
+    "transparentPixels" : 336264,
+    "width" : 540
+  },
+  {
+    "clip" : "long-yawn",
+    "cornerAlpha" : [
+      1,
+      0,
+      0,
+      0
+    ],
+    "duration" : 14.550000000000001,
+    "fps" : 60,
+    "height" : 720,
+    "opaquePixels" : 20899,
+    "transparentPixels" : 336264,
+    "width" : 540
+  }
+]
