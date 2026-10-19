@@ -80,11 +80,11 @@ struct FocusRootView: View {
     private var toolbar: some View {
         HStack(spacing: 8) {
             GeometryReader { geometry in
-                let itemWidth = (geometry.size.width - 8) / Double(store.modes.count)
+                let itemWidth = (geometry.size.width - 8) / CGFloat(store.modes.count)
                 let index = store.modes.firstIndex { $0.id == store.selectedID } ?? 0
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 8).fill(store.dark ? Color.white : palette.button).shadow(color: .black.opacity(store.dark ? 0 : 0.06), radius: 1.5, y: 1)
-                        .frame(width: itemWidth, height: 27).offset(x: 4 + Double(index) * itemWidth)
+                        .frame(width: itemWidth, height: 27).offset(x: 4 + CGFloat(index) * itemWidth)
                         .animation(store.reduceMotion ? nil : .timingCurve(0.22, 1, 0.36, 1, duration: 0.38), value: store.selectedID)
                     HStack(spacing: 0) {
                         ForEach(store.modes) { mode in

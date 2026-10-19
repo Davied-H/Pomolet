@@ -39,7 +39,7 @@ struct NativeToast: View {
                     .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(palette.line, lineWidth: 1))
                     .shadow(color: Color(hex: 0x1d3d2a).opacity(23.0 / 255), radius: 10, y: 5)
                     .opacity(timeline.value("opacity"))
-                    .position(x: 195, y: 13 + size.height / 2 + timeline.value("offset"))
+                    .position(x: 195, y: CGFloat(13) + size.height / 2 + CGFloat(timeline.value("offset")))
                     .accessibilityLabel(message)
             }
         }.frame(width: 390, height: 420).allowsHitTesting(false)

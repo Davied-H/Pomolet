@@ -105,12 +105,12 @@ struct MiniChart: View, Animatable {
     var animatableData: Double { get { progress } set { progress = newValue } }
     var body: some View {
         Canvas { context, size in
-            let left = 2.0, right = size.width - 2, top = 3.0, bottom = size.height - 3
+            let left = 2.0, right = Double(size.width) - 2, top = 3.0, bottom = Double(size.height) - 3
             var baseline = Path(); baseline.move(to: CGPoint(x: left, y: bottom)); baseline.addLine(to: CGPoint(x: right, y: bottom))
             context.stroke(baseline, with: .color(palette.line), style: StrokeStyle(lineWidth: 1, dash: [2, 3]))
             let maximum = values.compactMap { $0 }.max() ?? 0
             guard maximum > 0 else { context.draw(Text("暂无记录").font(.system(size: 9)).foregroundColor(palette.sub), at: CGPoint(x: size.width / 2, y: size.height / 2)); return }
-            context.clip(to: Path(CGRect(x: 0, y: 0, width: size.width * min(1, max(0, progress)), height: size.height)))
+            context.clip(to: Path(CGRect(x: 0, y: 0, width: size.width * CGFloat(min(1, max(0, progress))), height: size.height)))
             if bar {
                 let step = (right - left) / Double(values.count), width = max(3, min(10, step * 0.48))
                 for (index, value) in values.enumerated() {
@@ -122,7 +122,7 @@ struct MiniChart: View, Animatable {
                 let points = values.enumerated().compactMap { index, value -> CGPoint? in guard let value else { return nil }; return CGPoint(x: left + Double(index) * (right - left) / Double(max(1, values.count - 1)), y: bottom - value / maximum * (bottom - top)) }
                 guard let first = points.first, let last = points.last else { return }
                 var line = Path(); line.move(to: first); points.dropFirst().forEach { line.addLine(to: $0) }
-                var area = line; area.addLine(to: CGPoint(x: last.x, y: bottom)); area.addLine(to: CGPoint(x: first.x, y: bottom)); area.closeSubpath()
+                var area = line; area.addLine(to: CGPoint(x: Double(last.x), y: bottom)); area.addLine(to: CGPoint(x: Double(first.x), y: bottom)); area.closeSubpath()
                 context.fill(area, with: .color(palette.accent.opacity(0.09)))
                 context.stroke(line, with: .color(palette.accent), style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
                 context.fill(Path(ellipseIn: CGRect(x: last.x - 2, y: last.y - 2, width: 4, height: 4)), with: .color(palette.accent))

@@ -14,13 +14,14 @@ final class LiquidRaster {
         lock.lock(); defer { lock.unlock() }
         let p = min(1,max(0,progress)), key = Key(width: width,progress: p,fill: fill,stroke: stroke,filtered: filtered)
         if cachedKey == key { return cachedImage }
-        let scale = 2.0, size = CGSize(width: width + 40,height: 64)
+        let scale: CGFloat = 2.0
+        let g = CGFloat(p), size = CGSize(width: width + 40,height: 64)
         guard let bitmap = CGContext(data:nil,width:Int((size.width*scale).rounded()),height:128,bitsPerComponent:8,bytesPerRow:0,space:space,bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         bitmap.scaleBy(x:scale,y:scale);bitmap.setAllowsAntialiasing(true);bitmap.clear(CGRect(origin:.zero,size:size))
         bitmap.setFillColor(NSColor(fill).cgColor);if let stroke { bitmap.setStrokeColor(NSColor(stroke).cgColor);bitmap.setLineWidth(1) }
-        let body = CGPath(roundedRect:CGRect(x:20,y:10,width:width-54*p,height:44),cornerWidth:12,cornerHeight:12,transform:nil)
+        let body = CGPath(roundedRect:CGRect(x:20,y:10,width:width-54*g,height:44),cornerWidth:12,cornerHeight:12,transform:nil)
         bitmap.addPath(body);bitmap.drawPath(using:stroke == nil ? .fill : .fillStroke)
-        let radius=18+4*p,x=20+width-44+22*p
+        let radius=18+4*g,x=20+width-44+22*g
         bitmap.setAlpha(min(1,p*5));bitmap.addEllipse(in:CGRect(x:x-radius,y:32-radius,width:radius*2,height:radius*2));bitmap.drawPath(using:stroke == nil ? .fill : .fillStroke)
         guard let sourceImage=bitmap.makeImage() else { return nil }
         let output:CGImage?

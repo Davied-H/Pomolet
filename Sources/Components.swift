@@ -254,7 +254,7 @@ struct TimerControls: View, Animatable {
     var animatableData: Double { get { separation } set { separation = newValue } }
     var body: some View {
         GeometryReader { geometry in
-            let width = geometry.size.width, p = min(1, max(0, separation)), mainWidth = width - 54 * p
+            let width = geometry.size.width, p = min(1, max(0, separation)), mainWidth = width - 54 * CGFloat(p)
             ZStack(alignment: .topLeading) {
                 LiquidBackground(progress: p, fill: colors.color("fill", fallback: palette.controlFill(running: store.running)), stroke: colors.color("stroke", fallback: store.dark && store.running ? Color(hex:0x3a3a3a) : .clear), reduced:store.reduceMotion).frame(width: width, height: 44, alignment: .top)
                 Button { store.toggle() } label: {
@@ -283,7 +283,7 @@ struct CircleReveal: Shape {
     func path(in rect: CGRect) -> Path {
         let distance = [CGPoint.zero, CGPoint(x: rect.width, y: 0), CGPoint(x: 0, y: rect.height), CGPoint(x: rect.width, y: rect.height)].map { hypot($0.x - origin.x, $0.y - origin.y) }.max()!
         let radius = ceil(distance) + 20
-        let r = radius * min(1, max(0, progress))
+        let r = radius * CGFloat(min(1, max(0, progress)))
         return Path(ellipseIn: CGRect(x: origin.x - r, y: origin.y - r, width: r * 2, height: r * 2))
     }
 }
@@ -292,7 +292,7 @@ struct MenuReveal: Shape {
     var above: Bool
     var animatableData: Double { get { progress } set { progress = newValue } }
     func path(in rect: CGRect) -> Path {
-        let height = rect.height * (0.3 + 0.7 * progress)
+        let height = rect.height * CGFloat(0.3 + 0.7 * progress)
         return Path(roundedRect: CGRect(x: 0, y: above ? rect.height - height : 0, width: rect.width, height: height), cornerRadius: 14)
     }
 }
