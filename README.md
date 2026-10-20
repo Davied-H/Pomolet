@@ -9,7 +9,7 @@ Pomolet pairs a quiet timer with an animated companion. Start a session and the 
 
 ## Demo
 
-[![Pomolet English demo — focus mode and native transitions](docs/media/pomolet-preview.gif)](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
+[![Pomolet English demo — focus mode and native transitions](docs/media/pomolet-preview-en.gif)](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
 
 [Full English demo · 52 seconds · Download MP4](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
 

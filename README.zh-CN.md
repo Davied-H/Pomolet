@@ -4,7 +4,7 @@
 
 ## 展示视频
 
-[![Pomolet 英文版展示：专注模式与原生转场](docs/media/pomolet-preview.gif)](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
+[![Pomolet 英文版展示：专注模式与原生转场](docs/media/pomolet-preview-en.gif)](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
 
 [英文完整展示 · 52 秒 · 下载 MP4](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
 
