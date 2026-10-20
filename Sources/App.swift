@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let store: PomodoroStore
@@ -14,12 +15,16 @@ import AppKit
     private var window: NSWindow!
     private var keyboard: Any?
     private var tokens: [NSObjectProtocol] = []
+    private var languageObserver: AnyCancellable?
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         buildMenu()
+        languageObserver = store.$language.dropFirst().sink { [weak self] _ in
+            DispatchQueue.main.async { self?.buildMenu() }
+        }
         let frame = NSRect(x: 0, y: 0, width: 446, height: 476)
         window = FocusWindow(contentRect: frame, styleMask: [.borderless, .closable, .miniaturizable], backing: .buffered, defer: false)
-        window.title = Bundle.main.bundleIdentifier?.hasSuffix(".parity") == true ? "Pomolet · 对照校验" : "Pomolet"; window.backgroundColor = .clear; window.isOpaque = false; window.hasShadow = false
+        window.title = Bundle.main.bundleIdentifier?.hasSuffix(".parity") == true ? "Pomolet · QA" : "Pomolet"; window.backgroundColor = .clear; window.isOpaque = false; window.hasShadow = false
         window.isMovableByWindowBackground = true; window.isReleasedWhenClosed = false; window.delegate = self
         let host = NSHostingView(rootView: FocusRootView(store: store))
         host.wantsLayer = true; host.layer?.backgroundColor = NSColor.clear.cgColor; host.layer?.masksToBounds = false
@@ -76,19 +81,19 @@ import AppKit
         let bar = NSMenu(), appMenu = NSMenu(), fileMenu = NSMenu(), editMenu = NSMenu(), viewMenu = NSMenu(), windowMenu = NSMenu()
         func item(_ title: String, action: Selector?, key: String = "", target: AnyObject? = nil) -> NSMenuItem { let item = NSMenuItem(title: title, action: action, keyEquivalent: key); item.target = target; return item }
         func submenu(_ title: String, _ menu: NSMenu) { let top = NSMenuItem(title: title, action: nil, keyEquivalent: ""); top.submenu = menu; bar.addItem(top) }
-        appMenu.addItem(item("关于Pomolet", action: #selector(about), target: self)); appMenu.addItem(.separator())
-        appMenu.addItem(item("设置…", action: #selector(openSettings), key: ",", target: self)); appMenu.addItem(.separator())
-        appMenu.addItem(item("隐藏Pomolet", action: #selector(NSApplication.hide(_:)), key: "h")); appMenu.addItem(item("显示全部", action: #selector(NSApplication.unhideAllApplications(_:))))
-        appMenu.addItem(.separator()); appMenu.addItem(item("退出Pomolet", action: #selector(NSApplication.terminate(_:)), key: "q"))
-        fileMenu.addItem(item("开始 / 暂停", action: #selector(toggleTimer), key: "\r", target: self)); fileMenu.addItem(item("重置计时", action: #selector(resetTimer), key: "r", target: self)); fileMenu.addItem(.separator()); fileMenu.addItem(item("关闭窗口", action: #selector(closeWindow), key: "w", target: self))
-        editMenu.addItem(item("撤销", action: Selector(("undo:")), key: "z")); editMenu.addItem(item("重做", action: Selector(("redo:")), key: "Z")); editMenu.addItem(.separator())
-        editMenu.addItem(item("剪切", action: #selector(NSText.cut(_:)), key: "x")); editMenu.addItem(item("复制", action: #selector(NSText.copy(_:)), key: "c")); editMenu.addItem(item("粘贴", action: #selector(NSText.paste(_:)), key: "v")); editMenu.addItem(item("全选", action: #selector(NSText.selectAll(_:)), key: "a"))
-        viewMenu.addItem(item("番茄钟", action: #selector(openFocus), key: "1", target: self)); viewMenu.addItem(item("数据统计", action: #selector(openStatistics), key: "2", target: self)); viewMenu.addItem(item("切换深浅色", action: #selector(toggleTheme), key: "d", target: self))
-        windowMenu.addItem(item("最小化", action: #selector(NSWindow.miniaturize(_:)), key: "m")); windowMenu.addItem(item("显示主窗口", action: #selector(showWindow), key: "0", target: self))
-        submenu("Pomolet", appMenu); submenu("文件", fileMenu); submenu("编辑", editMenu); submenu("显示", viewMenu); submenu("窗口", windowMenu)
+        appMenu.addItem(item(store.text("关于Pomolet"), action: #selector(about), target: self)); appMenu.addItem(.separator())
+        appMenu.addItem(item(store.text("设置…"), action: #selector(openSettings), key: ",", target: self)); appMenu.addItem(.separator())
+        appMenu.addItem(item(store.text("隐藏Pomolet"), action: #selector(NSApplication.hide(_:)), key: "h")); appMenu.addItem(item(store.text("显示全部"), action: #selector(NSApplication.unhideAllApplications(_:))))
+        appMenu.addItem(.separator()); appMenu.addItem(item(store.text("退出Pomolet"), action: #selector(NSApplication.terminate(_:)), key: "q"))
+        fileMenu.addItem(item(store.text("开始 / 暂停"), action: #selector(toggleTimer), key: "\r", target: self)); fileMenu.addItem(item(store.text("重置计时"), action: #selector(resetTimer), key: "r", target: self)); fileMenu.addItem(.separator()); fileMenu.addItem(item(store.text("关闭窗口"), action: #selector(closeWindow), key: "w", target: self))
+        editMenu.addItem(item(store.text("撤销"), action: Selector(("undo:")), key: "z")); editMenu.addItem(item(store.text("重做"), action: Selector(("redo:")), key: "Z")); editMenu.addItem(.separator())
+        editMenu.addItem(item(store.text("剪切"), action: #selector(NSText.cut(_:)), key: "x")); editMenu.addItem(item(store.text("复制"), action: #selector(NSText.copy(_:)), key: "c")); editMenu.addItem(item(store.text("粘贴"), action: #selector(NSText.paste(_:)), key: "v")); editMenu.addItem(item(store.text("全选"), action: #selector(NSText.selectAll(_:)), key: "a"))
+        viewMenu.addItem(item(store.text("番茄钟"), action: #selector(openFocus), key: "1", target: self)); viewMenu.addItem(item(store.text("数据统计"), action: #selector(openStatistics), key: "2", target: self)); viewMenu.addItem(item(store.text("切换深浅色"), action: #selector(toggleTheme), key: "d", target: self))
+        windowMenu.addItem(item(store.text("最小化"), action: #selector(NSWindow.miniaturize(_:)), key: "m")); windowMenu.addItem(item(store.text("显示主窗口"), action: #selector(showWindow), key: "0", target: self))
+        submenu("Pomolet", appMenu); submenu(store.text("文件"), fileMenu); submenu(store.text("编辑"), editMenu); submenu(store.text("显示"), viewMenu); submenu(store.text("窗口"), windowMenu)
         NSApp.mainMenu = bar; NSApp.windowsMenu = windowMenu
     }
-    @objc private func about() { NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Pomolet", .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.1", .credits: NSAttributedString(string: "专注于眼前这一件事。\n原生 macOS · SwiftUI / AppKit")]) }
+    @objc private func about() { NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Pomolet", .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0", .credits: NSAttributedString(string: store.text("专注于眼前这一件事。\n原生 macOS · SwiftUI / AppKit"))]) }
     @objc private func openSettings() { window.makeKeyAndOrderFront(nil); window.makeFirstResponder(nil); store.navigate(.settings) }
     @objc private func openStatistics() { window.makeKeyAndOrderFront(nil); window.makeFirstResponder(nil); store.navigate(.statistics) }
     @objc private func openFocus() { window.makeFirstResponder(nil); store.navigate(.focus) }

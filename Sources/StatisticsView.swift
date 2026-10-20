@@ -9,27 +9,27 @@ struct StatisticsView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                QuietIconButton(name: "back", label: "返回番茄钟", palette: palette, size: 28, focusID: "statisticsBack") { store.navigate(.focus) }
-                Text("数据统计").font(.system(size: 15, weight: .semibold)); Spacer()
+                QuietIconButton(name: "back", label: store.text("返回番茄钟"), palette: palette, size: 28, focusID: "statisticsBack") { store.navigate(.focus) }
+                Text(store.text("数据统计")).font(.system(size: 15, weight: .semibold)); Spacer()
             }.padding(.horizontal, 22).frame(height: 48).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "header"))
             ScrollView {
                 VStack(spacing: 0) {
                     LazyVGrid(columns: columns, spacing: 10) {
-                        StatisticCard(title: "今日专注", value: Double(data.today.minutes), unit: "分钟", caption: "近 7 天 · 专注时长", values: data.days.map { Double($0.minutes) }, bar: false, index: 0, palette: palette, active: store.screen == .statistics, reduced: store.reduceMotion).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "card0"))
-                        StatisticCard(title: "完成番茄", value: Double(data.today.count), unit: "次", caption: "近 7 天 · 完成次数", values: data.days.map { Double($0.count) }, bar: true, index: 1, palette: palette, active: store.screen == .statistics, reduced: store.reduceMotion).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "card1"))
-                        StatisticCard(title: "平均时长", value: data.today.average, unit: "分钟", caption: "近 7 天 · 单次平均", values: data.days.map { $0.average }, bar: false, index: 2, palette: palette, active: store.screen == .statistics, reduced: store.reduceMotion).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "card2"))
-                        StatisticCard(title: "本周累计", value: Double(data.weekMinutes), unit: "分钟", caption: "周一至今 · 累计时长", values: data.week, bar: false, index: 3, palette: palette, active: store.screen == .statistics, reduced: store.reduceMotion).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "card3"))
+                        StatisticCard(title: store.text("今日专注"), value: Double(data.today.minutes), unit: store.text("分钟"), caption: store.text("近 7 天 · 专注时长"), values: data.days.map { Double($0.minutes) }, bar: false, index: 0, palette: palette, active: store.screen == .statistics, reduced: store.reduceMotion, language: store.language).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "card0"))
+                        StatisticCard(title: store.text("完成番茄"), value: Double(data.today.count), unit: store.language == .english && data.today.count == 1 ? "session" : store.text("次"), caption: store.text("近 7 天 · 完成次数"), values: data.days.map { Double($0.count) }, bar: true, index: 1, palette: palette, active: store.screen == .statistics, reduced: store.reduceMotion, language: store.language).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "card1"))
+                        StatisticCard(title: store.text("平均时长"), value: data.today.average, unit: store.text("分钟"), caption: store.text("近 7 天 · 单次平均"), values: data.days.map { $0.average }, bar: false, index: 2, palette: palette, active: store.screen == .statistics, reduced: store.reduceMotion, language: store.language).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "card2"))
+                        StatisticCard(title: store.text("本周累计"), value: Double(data.weekMinutes), unit: store.text("分钟"), caption: store.text("周一至今 · 累计时长"), values: data.week, bar: false, index: 3, palette: palette, active: store.screen == .statistics, reduced: store.reduceMotion, language: store.language).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "card3"))
                     }
                     VStack(spacing: 0) {
-                    HStack { Text("今日记录").font(CSSFont.font(11, weight: 550)); Spacer(); Text("\(store.todayRecords.count) 条").font(.system(size: 9)).foregroundStyle(palette.sub) }.padding(.top, 19).padding(.bottom, 7)
+                    HStack { Text(store.text("今日记录")).font(CSSFont.font(11, weight: 550)); Spacer(); Text(store.todayRecords.count == 1 ? store.text("1 条") : store.text("%d 条", store.todayRecords.count)).font(.system(size: 9)).foregroundStyle(palette.sub) }.padding(.top, 19).padding(.bottom, 7)
                     Rectangle().fill(palette.line).frame(height: 1)
                     }.modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "historyHeading"))
                     VStack(spacing: 0) {
                     ForEach(store.todayRecords) { record in
                         HStack(spacing: 12) {
-                            Text(record.endedAt, format: .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(Locale(identifier: "zh_CN"))).font(.system(size: 10)).foregroundStyle(palette.sub).monospacedDigit().fixedSize()
-                            Text(record.task.isEmpty ? "专注当下" : record.task).font(.system(size: 11)).frame(maxWidth: .infinity, alignment: .leading)
-                            Text("\(record.minutes) 分钟").font(.system(size: 11)).foregroundStyle(palette.sub).fixedSize()
+                            Text(record.endedAt, format: .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(store.language.locale)).font(.system(size: 10)).foregroundStyle(palette.sub).monospacedDigit().fixedSize()
+                            Text(record.task.isEmpty ? store.text("专注当下") : record.task).font(.system(size: 11)).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(store.text("%d 分钟", record.minutes)).font(.system(size: 11)).foregroundStyle(palette.sub).fixedSize()
                         }.padding(.vertical, 13)
                         Rectangle().fill(palette.line).frame(height: 1)
                     }
@@ -37,8 +37,8 @@ struct StatisticsView: View {
                     if store.todayRecords.isEmpty {
                         VStack(spacing: 0) {
                             Glyph(name: "leaf", size: 22).padding(.bottom, 6)
-                            Text("今天的第一份专注，从现在开始。").font(.system(size: 11)).frame(minHeight: 22)
-                            Button { store.navigate(.focus) } label: { Text("开始一次专注").font(.system(size: 11)).frame(height: 22).padding(.horizontal, 14).padding(.vertical, 8).foregroundStyle(palette.accent).background(palette.wash, in: RoundedRectangle(cornerRadius: 10)) }.buttonStyle(.plain).padding(.top, 8).focusTarget("backFocus")
+                            Text(store.text("今天的第一份专注，从现在开始。")).font(.system(size: 11)).frame(minHeight: 22)
+                            Button { store.navigate(.focus) } label: { Text(store.text("开始一次专注")).font(.system(size: 11)).frame(height: 22).padding(.horizontal, 14).padding(.vertical, 8).foregroundStyle(palette.accent).background(palette.wash, in: RoundedRectangle(cornerRadius: 10)) }.buttonStyle(.plain).padding(.top, 8).focusTarget("backFocus")
                         }.foregroundStyle(palette.sub).frame(maxWidth: .infinity).padding(.top, 20).padding(.bottom, 8).modifier(PagePartMotion(timeline: timeline, namespace: "statistics", part: "empty"))
                     }
                 }.padding(.horizontal, 26).padding(.top, 10).padding(.bottom, 22)
@@ -57,6 +57,7 @@ struct StatisticCard: View {
     var palette: Palette
     var active: Bool
     var reduced: Bool
+    var language: AppLanguage = .zhHans
     @State private var chartEpoch = 0.0
     @State private var animating = false
     @State private var heldProgress = 1.0
@@ -70,12 +71,12 @@ struct StatisticCard: View {
                 Text(unit).font(.system(size: 9)).foregroundStyle(palette.sub)
             }.frame(height: 32.2, alignment: .leading)
             TimelineView(.animation(minimumInterval: 1.0 / 120, paused: !animating)) { _ in
-                MiniChart(values: values, bar: bar, progress: animating ? WebChartProgress.value(elapsed: ProcessInfo.processInfo.systemUptime - chartEpoch, index: index) : heldProgress, palette: palette)
+                MiniChart(values: values, bar: bar, progress: animating ? WebChartProgress.value(elapsed: ProcessInfo.processInfo.systemUptime - chartEpoch, index: index) : heldProgress, palette: palette, language: language)
             }.frame(height: 32).padding(.top, 8)
-            Text(caption).font(.system(size: 8)).foregroundStyle(palette.sub).lineLimit(1).frame(height: 12, alignment: .leading).padding(.top, 4)
+            Text(caption).font(.system(size: 8)).minimumScaleFactor(0.8).foregroundStyle(palette.sub).lineLimit(1).frame(height: 12, alignment: .leading).padding(.top, 4)
         }.padding(.horizontal, 13).padding(.top, 12).padding(.bottom, 10).padding(1).frame(maxWidth: .infinity, alignment: .leading)
             .background(palette.side, in: RoundedRectangle(cornerRadius: 13)).overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(palette.line, lineWidth: 1))
-            .accessibilityElement(children: .ignore).accessibilityLabel("\(title)，\(number)\(unit)。\(caption)：" + values.map { $0.map { String(format: "%.1f", $0) } ?? "尚未到来" }.joined(separator: "，"))
+            .accessibilityElement(children: .ignore).accessibilityLabel(language.text("%@，%@%@。%@：%@", title, number, unit, caption, values.map { $0.map { String(format: "%.1f", locale: language.locale, $0) } ?? language.text("尚未到来") }.joined(separator: language == .english ? ", " : "，")))
             .onAppear { startChart() }
             .onChange(of: active) { _, visible in if visible { startChart() } else { stopChart(complete: false) } }
             .onChange(of: values) { _, _ in startChart() }
@@ -102,6 +103,7 @@ struct MiniChart: View, Animatable {
     var bar: Bool
     var progress: Double
     var palette: Palette
+    var language: AppLanguage = .zhHans
     var animatableData: Double { get { progress } set { progress = newValue } }
     var body: some View {
         Canvas { context, size in
@@ -109,7 +111,7 @@ struct MiniChart: View, Animatable {
             var baseline = Path(); baseline.move(to: CGPoint(x: left, y: bottom)); baseline.addLine(to: CGPoint(x: right, y: bottom))
             context.stroke(baseline, with: .color(palette.line), style: StrokeStyle(lineWidth: 1, dash: [2, 3]))
             let maximum = values.compactMap { $0 }.max() ?? 0
-            guard maximum > 0 else { context.draw(Text("暂无记录").font(.system(size: 9)).foregroundColor(palette.sub), at: CGPoint(x: size.width / 2, y: size.height / 2)); return }
+            guard maximum > 0 else { context.draw(Text(language.text("暂无记录")).font(.system(size: 9)).foregroundColor(palette.sub), at: CGPoint(x: size.width / 2, y: size.height / 2)); return }
             context.clip(to: Path(CGRect(x: 0, y: 0, width: size.width * CGFloat(min(1, max(0, progress))), height: size.height)))
             if bar {
                 let step = (right - left) / Double(values.count), width = max(3, min(10, step * 0.48))

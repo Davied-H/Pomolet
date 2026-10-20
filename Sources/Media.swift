@@ -151,7 +151,7 @@ struct CharacterView: View {
             ForEach(Array(media.players.keys).sorted(), id: \.self) { key in
                 if let player = media.players[key] { PlayerSurface(player: player, onDisplay: { ready in media.setDisplayReady(key, ready: ready) }).opacity(key == media.clip && media.ready && !media.seeking && !reduced ? 1 : 0) }
             }
-        }.allowsHitTesting(false).accessibilityLabel("戴耳机的少年").accessibilityHidden(true)
+        }.allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 extension View {

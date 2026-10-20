@@ -57,6 +57,12 @@ Tests cover 45 business assertions, 50 animation/appearance checks, and native d
 
 See [validation notes](docs/VALIDATION.md) for what was verified and the remaining visual-comparison limits. Intel is compiled but has not been tested on physical Intel hardware.
 
+## Languages
+
+Choose **中文** or **English** at the top of Settings (Command–comma). Changes apply immediately to the interface and macOS menus, and are saved automatically. Switching languages does not reset the timer. Built-in mode labels are translated; your own mode names, tasks and history remain as written. New installations follow a supported system language; existing installations retain Chinese until changed.
+
+The source-language catalog lives in `Sources/Localization.swift`. `test.sh` also runs 305 localization checks for translation coverage, formatting, migration and session preservation. Mode names accept up to 24 characters in either language.
+
 ## Keyboard
 
 - Space: start/pause when focus is outside text fields and buttons.

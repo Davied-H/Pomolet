@@ -258,12 +258,12 @@ struct TimerControls: View, Animatable {
             ZStack(alignment: .topLeading) {
                 LiquidBackground(progress: p, fill: colors.color("fill", fallback: palette.controlFill(running: store.running)), stroke: colors.color("stroke", fallback: store.dark && store.running ? Color(hex:0x3a3a3a) : .clear), reduced:store.reduceMotion).frame(width: width, height: 44, alignment: .top)
                 Button { store.toggle() } label: {
-                    HStack(spacing: 8) { Glyph(name: store.running ? "pause" : "play", size: 14); Text(store.running ? "暂停" : store.roundStarted ? "继续" : "开始" + store.selected.name).font(.system(size: 13, weight: .semibold)) }
+                    HStack(spacing: 8) { Glyph(name: store.running ? "pause" : "play", size: 14); Text(store.controlTitle).font(.system(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7) }
                         .foregroundStyle(colors.color("ink", fallback: palette.controlInk(running: store.running))).frame(width: mainWidth, height: 44).contentShape(RoundedRectangle(cornerRadius: 12))
-                }.buttonStyle(.plain).focusTarget("start").accessibilityLabel(store.running ? "暂停" : store.roundStarted ? "继续" : "开始" + store.selected.name)
+                }.buttonStyle(.plain).focusTarget("start").accessibilityLabel(store.controlTitle)
                 Button { store.reset() } label: {
                     Glyph(name: "reset", size: 17).offset(x: -22 * (1 - p)).foregroundStyle(colors.color("ink", fallback: palette.controlInk(running: store.running))).frame(width: 44, height: 44).contentShape(Circle())
-                }.buttonStyle(.plain).focusTarget("reset").offset(x: width - 44).opacity(max(0, min(1, (p - 0.65) / 0.35))).allowsHitTesting(store.roundStarted && p > 0.82).disabled(!store.roundStarted || p <= 0.82).accessibilityHidden(!store.roundStarted || p <= 0.82).accessibilityLabel("重置当前计时")
+                }.buttonStyle(.plain).focusTarget("reset").offset(x: width - 44).opacity(max(0, min(1, (p - 0.65) / 0.35))).allowsHitTesting(store.roundStarted && p > 0.82).disabled(!store.roundStarted || p <= 0.82).accessibilityHidden(!store.roundStarted || p <= 0.82).accessibilityLabel(store.text("重置当前计时"))
             }
         }.frame(height: 44)
             .onAppear { updateColors(instant: true) }

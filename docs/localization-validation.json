@@ -1,0 +1,9 @@
+{
+  "catalogEntries" : 99,
+  "checks" : 305,
+  "coverage" : "UI catalog, format placeholders, legacy migration, user data preservation, active timer, restart and live feedback",
+  "languages" : [
+    "zh-Hans",
+    "en"
+  ]
+}

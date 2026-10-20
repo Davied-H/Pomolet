@@ -33,6 +33,7 @@ struct FocusRootView: View {
             NativeToast(store: store).zIndex(40)
         }
         .frame(width: width, height: height)
+        .environment(\.locale, store.language.locale)
         .environment(\.colorScheme, store.dark ? .dark : .light)
         .padding(28)
         .onAppear { taskText = store.task; synchronizeMedia(); updateFocus(initial:true); updateNavigation() }
@@ -63,7 +64,7 @@ struct FocusRootView: View {
                 .modifier(PagePartMotion(timeline: navigation.timeline, namespace: "home", part: "clock"))
                 .modifier(ChromeMotion(visible: chromeVisible, index: 2, reduced: store.reduceMotion, interrupted: flowInterrupted))
             FocusClock(text:store.timeText,progress:focusProgress,color:palette.ink)
-                .accessibilityLabel("剩余 \(store.remaining / 60) 分 \(store.remaining % 60) 秒")
+                .accessibilityLabel(store.text("剩余 %d 分 %d 秒", store.remaining / 60, store.remaining % 60))
                 .animation(store.reduceMotion ? nil : layoutAnimation.delay(flowInterrupted ? 0 : store.running ? 0.135 : 0.015), value: focusProgress)
                 .modifier(PagePartMotion(timeline: navigation.timeline, namespace: "home", part: "clock"))
             taskField.frame(width: 336, height: 38).position(x: 194, y: 270)
@@ -89,24 +90,24 @@ struct FocusRootView: View {
                     HStack(spacing: 0) {
                         ForEach(store.modes) { mode in
                             Button { store.setMode(mode.id) } label: {
-                                Text(mode.name).font(CSSFont.font(11, weight: store.selectedID == mode.id ? 650 : 400)).lineLimit(1)
+                                Text(store.displayName(mode)).font(CSSFont.font(11, weight: store.selectedID == mode.id ? 650 : 400)).lineLimit(1)
                                     .foregroundStyle(store.selectedID == mode.id ? (store.dark ? Color.black : palette.accent) : palette.sub)
                                     .frame(width: itemWidth, height: 27).contentShape(Rectangle())
-                            }.buttonStyle(.plain).focusable(store.selectedID == mode.id).focusTarget("mode:" + mode.id).help("\(mode.name) · \(mode.minutes) 分钟").accessibilityAddTraits(store.selectedID == mode.id ? .isSelected : [])
+                            }.buttonStyle(.plain).focusable(store.selectedID == mode.id).focusTarget("mode:" + mode.id).help(store.text("%@ · %d 分钟", store.displayName(mode), mode.minutes)).accessibilityAddTraits(store.selectedID == mode.id ? .isSelected : [])
                         }
                     }.padding(.horizontal, 4)
                 }.frame(height: 35)
             }.frame(height: 35)
             HStack(spacing: 4) {
-                QuietIconButton(name: "chart", label: "数据统计", palette: palette, glyphOpacity: navigation.timeline.value("chartGlyph.opacity", fallback: 1), glyphScale: navigation.timeline.value("chartGlyph.scale", fallback: 1), foreground: store.screen == .statistics ? palette.accent : palette.ink, pressed: store.screen == .statistics, focusID: "statistics") { store.navigate(.statistics) }
-                QuietIconButton(name: "gear", label: "打开计时设置", palette: palette, glyphRotation: store.screen == .settings ? 75 : 0, foreground: store.screen == .settings ? palette.accent : palette.ink, pressed: store.screen == .settings, reduceMotion: store.reduceMotion, focusID: "settings") { store.navigate(.settings) }
+                QuietIconButton(name: "chart", label: store.text("数据统计"), palette: palette, glyphOpacity: navigation.timeline.value("chartGlyph.opacity", fallback: 1), glyphScale: navigation.timeline.value("chartGlyph.scale", fallback: 1), foreground: store.screen == .statistics ? palette.accent : palette.ink, pressed: store.screen == .statistics, focusID: "statistics") { store.navigate(.statistics) }
+                QuietIconButton(name: "gear", label: store.text("打开计时设置"), palette: palette, glyphRotation: store.screen == .settings ? 75 : 0, foreground: store.screen == .settings ? palette.accent : palette.ink, pressed: store.screen == .settings, reduceMotion: store.reduceMotion, focusID: "settings") { store.navigate(.settings) }
             }
         }
     }
     private var taskField: some View {
         HStack(spacing: 9) {
             Glyph(name: "pencil", size: 14).foregroundStyle(taskFocused ? palette.accent : palette.sub)
-            NativeField(text: $taskText, placeholder: "点击输入本次专注事项（可选）", label: "当前专注任务", fontSize: 11, color: NSColor(palette.ink), placeholderColor: NSColor(palette.sub), focusID: "task", onValue: { store.saveTask($0) }, onFocus: { taskFocused = $0 })
+            NativeField(text: $taskText, placeholder: store.text("点击输入本次专注事项（可选）"), label: store.text("当前专注任务"), fontSize: 11, color: NSColor(palette.ink), placeholderColor: NSColor(palette.sub), focusID: "task", onValue: { store.saveTask($0) }, onFocus: { taskFocused = $0 })
         }.padding(.horizontal, 2).overlay(alignment: .bottom) { Rectangle().fill(taskFocused ? palette.accent : palette.line).frame(height: 1) }
             .animation(store.reduceMotion ? nil : .easeOut(duration: 0.18), value: taskFocused)
     }
@@ -114,13 +115,13 @@ struct FocusRootView: View {
         VStack(spacing: 0) {
             Rectangle().fill(palette.line).frame(height: 1)
             HStack(spacing: 7) {
-                Text("今日").font(.system(size: 10)).foregroundStyle(palette.sub)
+                Text(store.text("今日")).font(.system(size: 10)).foregroundStyle(palette.sub)
                 HStack(spacing: 5) { ForEach(0..<4) { index in Circle().fill(index < store.todayRecords.count ? palette.accent : Color(hex: store.dark ? 0x383838 : 0xd5ddcf)).frame(width: 6, height: 6) } }
                 Text("\(store.todayRecords.count) / 4").font(.system(size: 10)).foregroundStyle(palette.sub).padding(.leading, 1)
                 Spacer()
                 HStack(spacing: 7) {
-                    QuietIconButton(name: "sound", label: store.sound ? "关闭结束提示音" : "开启结束提示音", palette: palette, size: 24, height: 22, glyphSize: 14, buttonOpacity: store.sound ? 1 : 0.45, tooltip: store.sound ? "结束时轻声提醒" : "结束提示音已关闭", foreground: palette.sub, customTooltip: true, reduceMotion: store.reduceMotion, focusID: "sound") { store.toggleSound() }
-                    QuietIconButton(name: "moon", label: "切换深浅色", palette: palette, size: 24, height: 22, glyphSize: 14, foreground: palette.sub, focusID: "theme") { store.toggleTheme() }
+                    QuietIconButton(name: "sound", label: store.sound ? store.text("关闭结束提示音") : store.text("开启结束提示音"), palette: palette, size: 24, height: 22, glyphSize: 14, buttonOpacity: store.sound ? 1 : 0.45, tooltip: store.sound ? store.text("结束时轻声提醒") : store.text("结束提示音已关闭"), foreground: palette.sub, customTooltip: true, reduceMotion: store.reduceMotion, focusID: "sound") { store.toggleSound() }
+                    QuietIconButton(name: "moon", label: store.text("切换深浅色"), palette: palette, size: 24, height: 22, glyphSize: 14, foreground: palette.sub, focusID: "theme") { store.toggleTheme() }
                 }
             }.frame(height: 42)
         }

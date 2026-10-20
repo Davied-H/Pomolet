@@ -13,7 +13,8 @@ struct TimerMode: Codable, Identifiable, Equatable {
     var name: String
     var minutes: Int
     var kind: ModeKind
-    static let defaults = [TimerMode(id: "focus", name: "专注", minutes: 25, kind: .focus), TimerMode(id: "short", name: "短休息", minutes: 5, kind: .short), TimerMode(id: "long", name: "长休息", minutes: 15, kind: .long)]
+    var builtInName: ModeKind?
+    static let defaults = [TimerMode(id: "focus", name: "专注", minutes: 25, kind: .focus, builtInName: .focus), TimerMode(id: "short", name: "短休息", minutes: 5, kind: .short, builtInName: .short), TimerMode(id: "long", name: "长休息", minutes: 15, kind: .long, builtInName: .long)]
 }
 struct FocusRecord: Codable, Identifiable, Equatable {
     var id = UUID()
@@ -31,7 +32,7 @@ struct TimerSession: Codable {
     var roundStarted: Bool
 }
 struct SavedState: Codable {
-    var schemaVersion = 1
+    var schemaVersion = 2
     var modes = TimerMode.defaults
     var sound = true
     var dark = false
@@ -39,6 +40,7 @@ struct SavedState: Codable {
     var records: [FocusRecord] = []
     var session: TimerSession?
     var lastFocusID: String?
+    var language: String?
 }
 struct StatisticsData {
     struct Day {
@@ -87,13 +89,14 @@ enum SettingsField: CaseIterable { case name, minutes }
     @Published var task = ""
     @Published var screen: AppScreen = .focus
     @Published var typeMenuOpen = false
-    @Published var settingsMessage = "修改自动保存。最多 5 个模式，每个 1–120 分钟。"
+    @Published private(set) var language = AppLanguage.preferred()
     @Published var toast: String?
     @Published var windowVisible = true
     @Published var reduceMotion = false
     private(set) var deadline: Date?
     private var lastFocusID = "focus"
     private var settingsErrors: [String: [SettingsField: String]] = [:]
+    private var toastSource: String?
     private var toastGeneration = 0
     private var lastDay: Date
     private var ticker: Timer?
@@ -105,7 +108,23 @@ enum SettingsField: CaseIterable { case name, minutes }
     var timeText: String { String(format: "%02d:%02d", remaining / 60, remaining % 60) }
     var todayRecords: [FocusRecord] { records.filter { Calendar.current.isDate($0.endedAt, inSameDayAs: now()) }.sorted { $0.endedAt > $1.endedAt } }
     var statistics: StatisticsData { StatisticsData.build(records: records, now: now()) }
-    var status: String { roundStarted ? "暂停片刻，随时继续" : selected.kind == .focus ? "准备好，进入心流" : "休息，也是专注的一部分" }
+    func text(_ source: String, _ arguments: CVarArg...) -> String {
+        let format = language == .english ? Localizations.english[source] ?? source : source
+        return arguments.isEmpty ? format : String(format: format, locale: language.locale, arguments: arguments)
+    }
+    func displayName(_ mode: TimerMode) -> String { mode.builtInName.map { text($0.title) } ?? mode.name }
+    var controlTitle: String { running ? text("暂停") : roundStarted ? text("继续") : text("开始%@", displayName(selected)) }
+    var status: String { text(roundStarted ? "暂停片刻，随时继续" : selected.kind == .focus ? "准备好，进入心流" : "休息，也是专注的一部分") }
+    func setLanguage(_ value: AppLanguage) {
+        guard language != value else { return }
+        language = value
+        if let source = toastSource { toast = text(source) }
+        settingsOK(); persist()
+    }
+    var settingsMessage: String {
+        let error = modes.lazy.compactMap { mode in SettingsField.allCases.compactMap { self.settingsErrors[mode.id]?[$0] }.first }.first
+        return error.map { text($0) + text("，已保留上次有效设置。") } ?? text("修改自动保存。最多 5 个模式，每个 1–120 分钟。")
+    }
     init(fileURL: URL? = nil, startTicker: Bool = true, now: @escaping () -> Date = Date.init) {
         self.now = now
         self.lastDay = Calendar.current.startOfDay(for: now())
@@ -164,10 +183,10 @@ enum SettingsField: CaseIterable { case name, minutes }
     @discardableResult func updateName(_ id: String, value: String) -> Bool {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { setSettingsError(id, field: .name, message: "名称不能为空"); return false }
-        guard trimmed.count <= 6 else { setSettingsError(id, field: .name, message: "名称最多 6 个字"); return false }
-        guard !modes.contains(where: { $0.id != id && $0.name == trimmed }) else { setSettingsError(id, field: .name, message: "模式名称不能重复"); return false }
+        guard trimmed.count <= 24 else { setSettingsError(id, field: .name, message: "名称最多 24 个字符"); return false }
+        guard !modes.contains(where: { $0.id != id && (displayName($0) == trimmed || $0.name == trimmed) }) else { setSettingsError(id, field: .name, message: "模式名称不能重复"); return false }
         guard let index = modes.firstIndex(where: { $0.id == id }) else { return false }
-        modes[index].name = trimmed; clearSettingsError(id, field: .name); persist(); return true
+        if trimmed != displayName(modes[index]) { modes[index].name = trimmed; modes[index].builtInName = nil }; clearSettingsError(id, field: .name); persist(); return true
     }
     @discardableResult func updateMinutes(_ id: String, value: String) -> Bool {
         guard let minutes = Int(value), (1...120).contains(minutes) else { setSettingsError(id, field: .minutes, message: "时长需为 1–120 整数分钟"); return false }
@@ -185,8 +204,8 @@ enum SettingsField: CaseIterable { case name, minutes }
     }
     @discardableResult func addMode() -> String? {
         guard modes.count < 5 else { return nil }
-        var name = "新模式", suffix = 2
-        while modes.contains(where: { $0.name == name }) { name = "新模式\(suffix)"; suffix += 1 }
+        var name = text("新模式"), suffix = 2
+        while modes.contains(where: { displayName($0) == name || $0.name == name }) { name = text("新模式%d", suffix); suffix += 1 }
         let id = UUID().uuidString
         modes.append(TimerMode(id: id, name: name, minutes: 25, kind: .focus)); settingsOK(); persist(); return id
     }
@@ -209,10 +228,7 @@ enum SettingsField: CaseIterable { case name, minutes }
         settingsOK()
     }
     func settingsOK() {
-        let firstError = modes.lazy.compactMap { mode in
-            SettingsField.allCases.compactMap { self.settingsErrors[mode.id]?[$0] }.first
-        }.first
-        settingsMessage = firstError.map { $0 + "，已保留上次有效设置。" } ?? "修改自动保存。最多 5 个模式，每个 1–120 分钟。"
+        objectWillChange.send()
     }
     func saveTask(_ value: String) { task = String(value.prefix(50)); persist() }
     func toggleSound() { sound.toggle(); persist() }
@@ -221,13 +237,13 @@ enum SettingsField: CaseIterable { case name, minutes }
     func showToast(_ message: String) {
         toastGeneration += 1
         let generation = toastGeneration
-        toast = message
+        toastSource = message; toast = text(message)
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let self, self.toastGeneration == generation else { return }; self.toast = nil
+            guard let self, self.toastGeneration == generation else { return }; self.toast = nil; self.toastSource = nil
         }
     }
     func persist() {
-        let state = SavedState(modes: modes, sound: sound, dark: dark, task: task, records: records, session: TimerSession(selectedID: selectedID, running: running, deadline: deadline, remaining: remaining, total: total, roundStarted: roundStarted), lastFocusID: lastFocusID)
+        let state = SavedState(modes: modes, sound: sound, dark: dark, task: task, records: records, session: TimerSession(selectedID: selectedID, running: running, deadline: deadline, remaining: remaining, total: total, roundStarted: roundStarted), lastFocusID: lastFocusID, language: language.rawValue)
         do {
             try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; encoder.dateEncodingStrategy = .deferredToDate
@@ -243,10 +259,14 @@ enum SettingsField: CaseIterable { case name, minutes }
             let state = try decoder.decode(SavedState.self, from: Data(contentsOf: fileURL))
             var ids = Set<String>(), names = Set<String>()
             let valid = state.modes.filter { mode in
-                guard !mode.id.isEmpty, !mode.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, mode.name.count <= 6, (1...120).contains(mode.minutes), !ids.contains(mode.id), !names.contains(mode.name) else { return false }
+                guard !mode.id.isEmpty, !mode.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, mode.name.count <= 24, (1...120).contains(mode.minutes), !ids.contains(mode.id), !names.contains(mode.name) else { return false }
                 ids.insert(mode.id); names.insert(mode.name); return true
             }
             modes = valid.isEmpty ? TimerMode.defaults : Array(valid.prefix(5))
+            for i in modes.indices where state.schemaVersion < 2 && modes[i].builtInName == nil {
+                if let original = TimerMode.defaults.first(where: { $0.id == modes[i].id && $0.name == modes[i].name }) { modes[i].builtInName = original.kind }
+            }
+            language = state.language.flatMap(AppLanguage.init(rawValue:)) ?? .zhHans
             sound = state.sound; dark = state.dark; task = String(state.task.prefix(50)); records = state.records.filter { $0.minutes > 0 && $0.minutes <= 1440 }
             selectedID = modes[0].id; remaining = modes[0].minutes * 60; total = remaining
             lastFocusID = modes.first { $0.id == state.lastFocusID && $0.kind == .focus }?.id ?? modes.first { $0.kind == .focus }?.id ?? selectedID
@@ -255,6 +275,6 @@ enum SettingsField: CaseIterable { case name, minutes }
                 if selected.kind == .focus { lastFocusID = selectedID }
                 if session.running, let end = session.deadline { running = true; deadline = end }
             }
-        } catch { toast = "本地数据无法读取，已使用默认设置。原文件未改动。" }
+        } catch { showToast("本地数据无法读取，已使用默认设置。原文件未改动。") }
     }
 }

@@ -50,6 +50,7 @@ import Foundation
         store.setMode(store.modes[0].id); store.toggle(); date = date.addingTimeInterval(Double(store.total)); store.tick(); check(!store.running && store.modes.count == 1, "single-mode completion safe")
         let validationFile = folder.appendingPathComponent("validation.json")
         let validation = PomodoroStore(fileURL: validationFile, startTicker: false, now: { date })
+        validation.setLanguage(.zhHans)
         check(!validation.updateName("focus", value: ""), "blank name creates field error")
         validation.updateMinutes("short", value: "6")
         check(validation.settingsMessage.contains("名称不能为空"), "valid duration edit keeps another row name error")

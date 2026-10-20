@@ -28,10 +28,11 @@ struct SettingsView: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
-                HStack { QuietIconButton(name: "back", label: "返回番茄钟", palette: palette, size: 28, focusID: "settingsBack") { finishEditing(); closeMenu(immediate: true); store.navigate(.focus) }; Spacer() }.padding(.horizontal, 22).frame(height: 48).modifier(PagePartMotion(timeline: timeline, namespace: "settings", part: "0", axis: "y"))
+                HStack { QuietIconButton(name: "back", label: store.text("返回番茄钟"), palette: palette, size: 28, focusID: "settingsBack") { finishEditing(); closeMenu(immediate: true); store.navigate(.focus) }; Spacer() }.padding(.horizontal, 22).frame(height: 48).modifier(PagePartMotion(timeline: timeline, namespace: "settings", part: "0", axis: "y"))
                 ScrollView {
                     VStack(spacing: 0) {
-                        HStack { Text("计时模式").font(.system(size: 13, weight: .semibold)); Spacer(); Text("\(store.modes.count) / 5").font(.system(size: 11)).foregroundStyle(palette.sub).monospacedDigit() }.frame(height: 30).padding(.top, 4).padding(.bottom, 2)
+                        languageSelector.padding(.bottom, 12)
+                        HStack { Text(store.text("计时模式")).font(.system(size: 13, weight: .semibold)); Spacer(); Text("\(store.modes.count) / 5").font(.system(size: 11)).foregroundStyle(palette.sub).monospacedDigit() }.frame(height: 30).padding(.top, 4).padding(.bottom, 2)
                         VStack(spacing: 8) {
                             ForEach(store.modes) { mode in
                                 SettingsModeRow(store: store, mode: mode, palette: palette, focusRequest: focusID == mode.id, openMenu: { toggleMenu(mode.id) }) {
@@ -45,16 +46,16 @@ struct SettingsView: View {
                         Button {
                             finishEditing(); closeMenu(immediate: true); focusID = store.addMode()
                         } label: {
-                            HStack(spacing: 6) { if store.modes.count < 5 { Glyph(name: "plus", size: 13) }; Text(store.modes.count < 5 ? "添加模式" : "已达 5 个模式上限").font(CSSFont.font(12, weight: 550)) }.foregroundStyle(store.modes.count < 5 ? palette.accent : palette.sub).frame(maxWidth: .infinity).frame(height: 42).background(palette.wash, in: RoundedRectangle(cornerRadius: 9))
+                            HStack(spacing: 6) { if store.modes.count < 5 { Glyph(name: "plus", size: 13) }; Text(store.modes.count < 5 ? store.text("添加模式") : store.text("已达 5 个模式上限")).font(CSSFont.font(12, weight: 550)) }.foregroundStyle(store.modes.count < 5 ? palette.accent : palette.sub).frame(maxWidth: .infinity).frame(height: 42).background(palette.wash, in: RoundedRectangle(cornerRadius: 9))
                         }.buttonStyle(.plain).focusTarget("addMode").disabled(store.modes.count >= 5).opacity(store.modes.count >= 5 ? 0.4 : 1).padding(.top, 12).padding(.bottom, 8)
                         HStack {
-                            Text("结束提示音").font(.system(size: 12)); Spacer()
+                            Text(store.text("结束提示音")).font(.system(size: 12)); Spacer()
                             Button { store.toggleSound() } label: {
                                 ZStack(alignment: .leading) {
                                     Capsule().fill(store.sound ? palette.accent : palette.side).overlay(Capsule().stroke(store.sound ? palette.accent : palette.line, lineWidth: 1))
                                     Circle().fill(store.sound ? palette.paper : palette.sub).frame(width: 13, height: 13).offset(x: store.sound ? 17 : 4)
                                 }.frame(width: 34, height: 21)
-                            }.buttonStyle(.plain).focusTarget("settingsSound").accessibilityLabel("结束提示音").accessibilityValue(store.sound ? "开启" : "关闭").animation(store.reduceMotion ? nil : .timingCurve(0.16, 1, 0.3, 1, duration: 0.2), value: store.sound)
+                            }.buttonStyle(.plain).focusTarget("settingsSound").accessibilityLabel(store.text("结束提示音")).accessibilityValue(store.sound ? store.text("开启") : store.text("关闭")).animation(store.reduceMotion ? nil : .timingCurve(0.16, 1, 0.3, 1, duration: 0.2), value: store.sound)
                         }.frame(height: 44).overlay(alignment: .bottom) { Rectangle().fill(palette.line).frame(height: 1) }.padding(.top, 16).modifier(PagePartMotion(timeline: timeline, namespace: "settings", part: "1", axis: "y"))
                         Text(store.settingsMessage).font(.system(size: 10)).lineSpacing(5).foregroundStyle(palette.sub).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 10).modifier(PagePartMotion(timeline: timeline, namespace: "settings", part: "2", axis: "y"))
                     }.padding(.horizontal, 26).padding(.top, 8).padding(.bottom, 24)
@@ -104,19 +105,41 @@ struct SettingsView: View {
             .onChange(of: store.screen) { _, screen in if screen != .settings { finishEditing(); closeMenu(immediate: true) } }
             .onDisappear { closeMenu(immediate: true) }
     }
+    private var languageSelector: some View {
+        HStack {
+            Text(store.text("语言")).font(.system(size: 12))
+            Spacer()
+            HStack(spacing: 3) {
+                ForEach(AppLanguage.allCases, id: \.self) { language in
+                    Button {
+                        finishEditing(); closeMenu(immediate: true)
+                        store.setLanguage(language)
+                    } label: {
+                        Text(language.nativeName).font(.system(size: 11, weight: store.language == language ? .semibold : .regular))
+                            .foregroundStyle(store.language == language ? palette.accent : palette.sub)
+                            .frame(width: 68, height: 28)
+                            .background(store.language == language ? palette.wash : .clear, in: RoundedRectangle(cornerRadius: 7))
+                    }.buttonStyle(.plain).focusTarget("language:" + language.rawValue)
+                        .accessibilityLabel(language.nativeName).accessibilityAddTraits(store.language == language ? .isSelected : [])
+                }
+            }.padding(3).background(palette.side, in: RoundedRectangle(cornerRadius: 10))
+                .accessibilityElement(children: .contain).accessibilityLabel(store.text("界面语言"))
+                .animation(store.reduceMotion ? nil : .easeOut(duration: 0.18), value: store.language)
+        }.frame(height: 40)
+    }
     private func menu(for mode: TimerMode) -> some View {
         VStack(spacing: 0) {
             ForEach(Array(ModeKind.allCases.enumerated()), id: \.element) { index, kind in
                 Button { store.updateKind(mode.id, kind: kind); closeMenu() } label: {
                     HStack(spacing: 8) {
                         Glyph(name: kind.symbol, size: 18).foregroundStyle(palette.accent)
-                        HStack(alignment: .firstTextBaseline, spacing: 8) { Text(kind.title).font(CSSFont.font(12, weight: 550)); Spacer(minLength: 0); Text(kind.detail).font(.system(size: 10)).foregroundStyle(palette.sub) }.frame(maxWidth: .infinity)
+                        HStack(alignment: .firstTextBaseline, spacing: 8) { Text(store.text(kind.title)).font(CSSFont.font(12, weight: 550)).lineLimit(1).minimumScaleFactor(0.8); Spacer(minLength: 0); Text(store.text(kind.detail)).font(.system(size: 10)).lineLimit(1).minimumScaleFactor(0.75).foregroundStyle(palette.sub) }.frame(maxWidth: .infinity)
                         Glyph(name: "check", size: 15).foregroundStyle(palette.accent).opacity(mode.kind == kind ? 1 : 0)
                     }.padding(.horizontal, 8).frame(height: 36).contentShape(Rectangle()).background(mode.kind == kind ? palette.wash : highlighted == index ? palette.side : .clear, in: RoundedRectangle(cornerRadius: 9))
                 }.buttonStyle(.plain).focusTarget("menu:" + kind.rawValue).onHover { hovering in if hovering { highlighted = index } }
-                    .accessibilityLabel(kind.title + "，" + kind.detail).accessibilityAddTraits(mode.kind == kind ? .isSelected : [])
+                    .accessibilityLabel(store.text(kind.title) + ", " + store.text(kind.detail)).accessibilityAddTraits(mode.kind == kind ? .isSelected : [])
             }
-        }.padding(4).accessibilityElement(children: .contain).accessibilityLabel("类型与动画")
+        }.padding(4).accessibilityElement(children: .contain).accessibilityLabel(store.text("类型与动画"))
     }
     private func finishEditing() { NSApp.keyWindow?.makeFirstResponder(nil) }
     private func toggleMenu(_ id: String) {
@@ -156,22 +179,22 @@ struct SettingsModeRow: View {
     @State private var minutesFocused = false
     init(store: PomodoroStore, mode: TimerMode, palette: Palette, focusRequest: Bool, openMenu: @escaping () -> Void, remove: @escaping () -> Void) {
         self.store = store; self.mode = mode; self.palette = palette; self.focusRequest = focusRequest; self.openMenu = openMenu; self.remove = remove
-        _name = State(initialValue: mode.name); _minutes = State(initialValue: String(mode.minutes))
+        _name = State(initialValue: store.displayName(mode)); _minutes = State(initialValue: String(mode.minutes))
     }
     var body: some View {
         HStack(spacing: 8) {
-            NativeField(text: $name, placeholder: "模式名称", label: "\(mode.name)的名称", fontSize: 18, weight: NSFont.Weight(rawValue: 0.265), tracking: -0.45, color: NSColor(palette.ink), placeholderColor: NSColor(palette.sub), limit: 6, focusRequest: focusRequest, focusID: "name:" + mode.id, onValue: { _ = store.updateName(mode.id, value: $0) }, onFocus: { nameFocused = $0 }, onEnd: { name = store.modes.first(where: { $0.id == mode.id })?.name ?? mode.name; store.clearSettingsError(mode.id, field: .name) }).frame(height: 48)
+            NativeField(text: $name, placeholder: store.text("模式名称"), label: store.text("%@的名称", store.displayName(mode)), fontSize: 18, weight: NSFont.Weight(rawValue: 0.265), tracking: -0.45, color: NSColor(palette.ink), placeholderColor: NSColor(palette.sub), limit: 24, focusRequest: focusRequest, focusID: "name:" + mode.id, onValue: { _ = store.updateName(mode.id, value: $0) }, onFocus: { nameFocused = $0 }, onEnd: { name = store.displayName(store.modes.first(where: { $0.id == mode.id }) ?? mode); store.clearSettingsError(mode.id, field: .name) }).frame(height: 48)
                 .overlay(alignment: .bottom) { Rectangle().fill(nameFocused ? palette.accent : nameHovered ? palette.line : .clear).frame(height: 1) }
                 .onHover { nameHovered = $0 }.animation(store.reduceMotion ? nil : .easeOut(duration: 0.18), value: nameFocused).animation(store.reduceMotion ? nil : .easeOut(duration: 0.18), value: nameHovered)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                NativeField(text: $minutes, label: "\(mode.name)的分钟", fontSize: 20, weight: NSFont.Weight(rawValue: 0.265), tracking: -0.5, color: NSColor(palette.ink), placeholderColor: NSColor(palette.sub), alignment: .right, limit: 3, numericStepper: true, focusID: "minutes:" + mode.id, onValue: { _ = store.updateMinutes(mode.id, value: $0) }, onFocus: { minutesFocused = $0 }, onEnd: { minutes = String(store.modes.first(where: { $0.id == mode.id })?.minutes ?? mode.minutes); store.clearSettingsError(mode.id, field: .minutes) }).frame(height: 28)
-                Text("分").font(.system(size: 10)).foregroundStyle(palette.sub)
+                NativeField(text: $minutes, label: store.text("%@的分钟", store.displayName(mode)), fontSize: 20, weight: NSFont.Weight(rawValue: 0.265), tracking: -0.5, color: NSColor(palette.ink), placeholderColor: NSColor(palette.sub), alignment: .right, limit: 3, numericStepper: true, focusID: "minutes:" + mode.id, onValue: { _ = store.updateMinutes(mode.id, value: $0) }, onFocus: { minutesFocused = $0 }, onEnd: { minutes = String(store.modes.first(where: { $0.id == mode.id })?.minutes ?? mode.minutes); store.clearSettingsError(mode.id, field: .minutes) }).frame(height: 28)
+                Text(store.text("分")).font(.system(size: 10)).foregroundStyle(palette.sub)
             }.padding(.horizontal, 8).frame(width: 64, height: 36).background(minutesFocused ? palette.minuteFocus : palette.side, in: RoundedRectangle(cornerRadius: 8)).animation(store.reduceMotion ? nil : .timingCurve(0.16, 1, 0.3, 1, duration: 0.22), value: minutesFocused)
-            Button(action: openMenu) { Glyph(name: mode.kind.symbol, size: 15).foregroundStyle(palette.accent).frame(width: 36, height: 36).contentShape(Rectangle()) }.buttonStyle(.plain).focusTarget("kind:" + mode.id).help(mode.kind.title + " · " + mode.kind.detail).accessibilityLabel("\(mode.name)的类型与动画：\(mode.kind.title)，\(mode.kind.detail)")
+            Button(action: openMenu) { Glyph(name: mode.kind.symbol, size: 15).foregroundStyle(palette.accent).frame(width: 36, height: 36).contentShape(Rectangle()) }.buttonStyle(.plain).focusTarget("kind:" + mode.id).help(store.text(mode.kind.title) + " · " + store.text(mode.kind.detail)).accessibilityLabel(store.text("%@的类型与动画：%@，%@", store.displayName(mode), store.text(mode.kind.title), store.text(mode.kind.detail)))
                 .background(GeometryReader { geometry in Color.clear.preference(key: ModeAnchorKey.self, value: [mode.id: geometry.frame(in: .named("settings"))]) })
-            Button(action: remove) { Glyph(name: "close", size: 14).foregroundStyle(palette.sub).frame(width: 28, height: 36).contentShape(Rectangle()) }.buttonStyle(.plain).focusTarget("delete:" + mode.id).disabled(store.modes.count <= 1).opacity(store.modes.count <= 1 ? 0.4 : 1).accessibilityLabel("删除\(mode.name)")
+            Button(action: remove) { Glyph(name: "close", size: 14).foregroundStyle(palette.sub).frame(width: 28, height: 36).contentShape(Rectangle()) }.buttonStyle(.plain).focusTarget("delete:" + mode.id).disabled(store.modes.count <= 1).opacity(store.modes.count <= 1 ? 0.4 : 1).accessibilityLabel(store.text("删除%@", store.displayName(mode)))
         }.padding(.horizontal, 10).padding(.vertical, 8).background(palette.side, in: RoundedRectangle(cornerRadius: 12))
-            .onChange(of: mode.name) { _, value in if !nameFocused { name = value } }
+            .onChange(of: store.displayName(mode)) { _, value in if !nameFocused { name = value } }
             .onChange(of: mode.minutes) { _, value in if !minutesFocused { minutes = String(value) } }
     }
 }
