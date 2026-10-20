@@ -4,11 +4,11 @@
 
 ## 展示视频
 
-[![Pomolet 展示：专注模式与原生转场](docs/media/pomolet-preview.gif)](https://github.com/Davied-H/Pomolet/releases/download/v1.0.1/pomolet-demo.mp4)
+[![Pomolet 英文版展示：专注模式与原生转场](docs/media/pomolet-preview.gif)](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
 
-[完整展示 · 54 秒 · 下载 MP4](https://github.com/Davied-H/Pomolet/releases/download/v1.0.1/pomolet-demo.mp4)
+[英文完整展示 · 52 秒 · 下载 MP4](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
 
-原生 macOS 应用实录，60fps，展示专注、休息、数据统计、设置菜单和黑白主题。统计使用独立样例数据，不影响正式记录。
+原生 macOS 应用英文界面实录，60fps，展示专注、休息、数据统计、设置菜单和黑白主题。统计使用独立样例数据，不影响正式记录。
 
 ## 运行
 
