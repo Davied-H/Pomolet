@@ -59,9 +59,9 @@ See [validation notes](docs/VALIDATION.md) for what was verified and the remaini
 
 ## Languages
 
-Choose **中文** or **English** at the top of Settings (Command–comma). Changes apply immediately to the interface and macOS menus, and are saved automatically. Switching languages does not reset the timer. Built-in mode labels are translated; your own mode names, tasks and history remain as written. New installations follow a supported system language; existing installations retain Chinese until changed.
+Choose **System**, **中文** or **English** at the top of Settings (Command–comma). Changes apply immediately to the interface and macOS menus, and are saved automatically. Switching languages does not reset the timer. Built-in mode labels are translated; your own mode names, tasks and history remain as written. The default is System: Chinese is used when the primary system language is Chinese; English is used for every other language. System continues to follow locale changes, while an explicit choice is remembered. Older data without a saved choice also uses System.
 
-The source-language catalog lives in `Sources/Localization.swift`. `test.sh` also runs 305 localization checks for translation coverage, formatting, migration and session preservation. Mode names accept up to 24 characters in either language.
+The source-language catalog lives in `Sources/Localization.swift`. `test.sh` also runs 318 localization checks for translation coverage, formatting, migration and session preservation. Mode names accept up to 24 characters in either language.
 
 ## Keyboard
 

@@ -110,21 +110,22 @@ struct SettingsView: View {
             Text(store.text("语言")).font(.system(size: 12))
             Spacer()
             HStack(spacing: 3) {
-                ForEach(AppLanguage.allCases, id: \.self) { language in
+                ForEach(LanguagePreference.allCases, id: \.self) { preference in
+                    let label = preference == .system ? store.text("跟随系统") : preference == .zhHans ? "中文" : "English"
                     Button {
                         finishEditing(); closeMenu(immediate: true)
-                        store.setLanguage(language)
+                        store.setLanguagePreference(preference)
                     } label: {
-                        Text(language.nativeName).font(.system(size: 11, weight: store.language == language ? .semibold : .regular))
-                            .foregroundStyle(store.language == language ? palette.accent : palette.sub)
+                        Text(label).font(.system(size: 11, weight: store.languagePreference == preference ? .semibold : .regular))
+                            .foregroundStyle(store.languagePreference == preference ? palette.accent : palette.sub)
                             .frame(width: 68, height: 28)
-                            .background(store.language == language ? palette.wash : .clear, in: RoundedRectangle(cornerRadius: 7))
-                    }.buttonStyle(.plain).focusTarget("language:" + language.rawValue)
-                        .accessibilityLabel(language.nativeName).accessibilityAddTraits(store.language == language ? .isSelected : [])
+                            .background(store.languagePreference == preference ? palette.wash : .clear, in: RoundedRectangle(cornerRadius: 7))
+                    }.buttonStyle(.plain).focusTarget("language:" + preference.rawValue)
+                        .accessibilityLabel(label).accessibilityAddTraits(store.languagePreference == preference ? .isSelected : [])
                 }
             }.padding(3).background(palette.side, in: RoundedRectangle(cornerRadius: 10))
                 .accessibilityElement(children: .contain).accessibilityLabel(store.text("界面语言"))
-                .animation(store.reduceMotion ? nil : .easeOut(duration: 0.18), value: store.language)
+                .animation(store.reduceMotion ? nil : .easeOut(duration: 0.18), value: store.languagePreference)
         }.frame(height: 40)
     }
     private func menu(for mode: TimerMode) -> some View {

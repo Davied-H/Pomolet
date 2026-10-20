@@ -31,6 +31,7 @@ import Combine
         window.contentView = host; window.center(); window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         store.reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        tokens.append(NotificationCenter.default.addObserver(forName: NSLocale.currentLocaleDidChangeNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.store.refreshSystemLanguage() } })
         store.onCompletion = { [weak self] in self?.chime.play() }
         keyboard = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
@@ -93,7 +94,7 @@ import Combine
         submenu("Pomolet", appMenu); submenu(store.text("文件"), fileMenu); submenu(store.text("编辑"), editMenu); submenu(store.text("显示"), viewMenu); submenu(store.text("窗口"), windowMenu)
         NSApp.mainMenu = bar; NSApp.windowsMenu = windowMenu
     }
-    @objc private func about() { NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Pomolet", .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0", .credits: NSAttributedString(string: store.text("专注于眼前这一件事。\n原生 macOS · SwiftUI / AppKit"))]) }
+    @objc private func about() { NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Pomolet", .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2.0", .credits: NSAttributedString(string: store.text("专注于眼前这一件事。\n原生 macOS · SwiftUI / AppKit"))]) }
     @objc private func openSettings() { window.makeKeyAndOrderFront(nil); window.makeFirstResponder(nil); store.navigate(.settings) }
     @objc private func openStatistics() { window.makeKeyAndOrderFront(nil); window.makeFirstResponder(nil); store.navigate(.statistics) }
     @objc private func openFocus() { window.makeFirstResponder(nil); store.navigate(.focus) }

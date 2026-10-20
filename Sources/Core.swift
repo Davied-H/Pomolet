@@ -90,6 +90,7 @@ enum SettingsField: CaseIterable { case name, minutes }
     @Published var screen: AppScreen = .focus
     @Published var typeMenuOpen = false
     @Published private(set) var language = AppLanguage.preferred()
+    @Published private(set) var languagePreference = LanguagePreference.system
     @Published var toast: String?
     @Published var windowVisible = true
     @Published var reduceMotion = false
@@ -102,6 +103,7 @@ enum SettingsField: CaseIterable { case name, minutes }
     private var ticker: Timer?
     private let fileURL: URL
     private let now: () -> Date
+    private let systemLanguages: () -> [String]
     private var storageFailureShown = false
     var onCompletion: (() -> Void)?
     var selected: TimerMode { modes.first { $0.id == selectedID } ?? modes[0] }
@@ -116,17 +118,28 @@ enum SettingsField: CaseIterable { case name, minutes }
     var controlTitle: String { running ? text("暂停") : roundStarted ? text("继续") : text("开始%@", displayName(selected)) }
     var status: String { text(roundStarted ? "暂停片刻，随时继续" : selected.kind == .focus ? "准备好，进入心流" : "休息，也是专注的一部分") }
     func setLanguage(_ value: AppLanguage) {
-        guard language != value else { return }
-        language = value
-        if let source = toastSource { toast = text(source) }
+        setLanguagePreference(value == .zhHans ? .zhHans : .english)
+    }
+    func setLanguagePreference(_ value: LanguagePreference) {
+        guard languagePreference != value else { return }
+        languagePreference = value
+        refreshSystemLanguage()
         settingsOK(); persist()
+    }
+    func refreshSystemLanguage() {
+        let resolved = languagePreference.resolve(systemLanguages())
+        guard language != resolved else { return }
+        language = resolved
+        if let source = toastSource { toast = text(source) }
     }
     var settingsMessage: String {
         let error = modes.lazy.compactMap { mode in SettingsField.allCases.compactMap { self.settingsErrors[mode.id]?[$0] }.first }.first
         return error.map { text($0) + text("，已保留上次有效设置。") } ?? text("修改自动保存。最多 5 个模式，每个 1–120 分钟。")
     }
-    init(fileURL: URL? = nil, startTicker: Bool = true, now: @escaping () -> Date = Date.init) {
+    init(fileURL: URL? = nil, startTicker: Bool = true, now: @escaping () -> Date = Date.init, systemLanguages: @escaping () -> [String] = { Locale.preferredLanguages }) {
         self.now = now
+        self.systemLanguages = systemLanguages
+        self.language = AppLanguage.preferred(systemLanguages())
         self.lastDay = Calendar.current.startOfDay(for: now())
         self.fileURL = fileURL ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("FocusNative/state.json")
         load()
@@ -243,7 +256,7 @@ enum SettingsField: CaseIterable { case name, minutes }
         }
     }
     func persist() {
-        let state = SavedState(modes: modes, sound: sound, dark: dark, task: task, records: records, session: TimerSession(selectedID: selectedID, running: running, deadline: deadline, remaining: remaining, total: total, roundStarted: roundStarted), lastFocusID: lastFocusID, language: language.rawValue)
+        let state = SavedState(modes: modes, sound: sound, dark: dark, task: task, records: records, session: TimerSession(selectedID: selectedID, running: running, deadline: deadline, remaining: remaining, total: total, roundStarted: roundStarted), lastFocusID: lastFocusID, language: languagePreference.rawValue)
         do {
             try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; encoder.dateEncodingStrategy = .deferredToDate
@@ -266,7 +279,8 @@ enum SettingsField: CaseIterable { case name, minutes }
             for i in modes.indices where state.schemaVersion < 2 && modes[i].builtInName == nil {
                 if let original = TimerMode.defaults.first(where: { $0.id == modes[i].id && $0.name == modes[i].name }) { modes[i].builtInName = original.kind }
             }
-            language = state.language.flatMap(AppLanguage.init(rawValue:)) ?? .zhHans
+            languagePreference = state.language.flatMap(LanguagePreference.init(rawValue:)) ?? .system
+            language = languagePreference.resolve(systemLanguages())
             sound = state.sound; dark = state.dark; task = String(state.task.prefix(50)); records = state.records.filter { $0.minutes > 0 && $0.minutes <= 1440 }
             selectedID = modes[0].id; remaining = modes[0].minutes * 60; total = remaining
             lastFocusID = modes.first { $0.id == state.lastFocusID && $0.kind == .focus }?.id ?? modes.first { $0.kind == .focus }?.id ?? selectedID

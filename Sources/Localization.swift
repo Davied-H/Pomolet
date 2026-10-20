@@ -7,15 +7,26 @@ enum AppLanguage: String, Codable, CaseIterable {
     var locale: Locale { Locale(identifier: rawValue) }
     var nativeName: String { self == .zhHans ? "中文" : "English" }
     static func preferred(_ identifiers: [String] = Locale.preferredLanguages) -> AppLanguage {
-        for identifier in identifiers {
-            if identifier.lowercased().hasPrefix("zh") { return .zhHans }
-            if identifier.lowercased().hasPrefix("en") { return .english }
-        }
-        return .english
+        let primary = identifiers.first?.lowercased() ?? "en"
+        return primary == "zh" || primary.hasPrefix("zh-") || primary.hasPrefix("zh_") ? .zhHans : .english
     }
     func text(_ source: String, _ arguments: CVarArg...) -> String {
         let format = self == .english ? Localizations.english[source] ?? source : source
         return arguments.isEmpty ? format : String(format: format, locale: locale, arguments: arguments)
+    }
+}
+
+/// A user override is separate from the effective language, so System remains dynamic.
+enum LanguagePreference: String, Codable, CaseIterable {
+    case system
+    case zhHans = "zh-Hans"
+    case english = "en"
+    func resolve(_ systemLanguages: [String]) -> AppLanguage {
+        switch self {
+        case .system: return AppLanguage.preferred(systemLanguages)
+        case .zhHans: return .zhHans
+        case .english: return .english
+        }
     }
 }
 
@@ -62,6 +73,7 @@ enum Localizations {
         "%@的类型与动画：%@，%@": "Type and animation for %@: %@, %@",
         "删除%@": "Delete %@",
         "语言": "Language",
+        "跟随系统": "System",
         "界面语言": "Interface language",
         "剩余 %d 分 %d 秒": "%d minutes, %d seconds remaining",
         "%@ · %d 分钟": "%@ · %d min",
