@@ -3,6 +3,7 @@ import AppKit
 
 struct FocusRootView: View {
     @ObservedObject var store: PomodoroStore
+    @ObservedObject var presentation: WindowPresentation
     @StateObject private var media = CharacterPlayer()
     @State private var focusProgress = 0.0
     @State private var chromeVisible = true
@@ -17,6 +18,14 @@ struct FocusRootView: View {
     private let width = 390.0, height = 420.0
     private var palette: Palette { Palette(dark: store.dark) }
     private var layoutAnimation: Animation { .timingCurve(0.16, 1, 0.3, 1, duration: store.running ? 0.41 : 0.37) }
+    @MainActor init(store: PomodoroStore, presentation: WindowPresentation) {
+        self.store = store
+        self.presentation = presentation
+        _focusProgress = State(initialValue: store.running ? 1 : 0)
+        _chromeVisible = State(initialValue: !store.running)
+        _taskText = State(initialValue: store.task)
+        _liquid = StateObject(wrappedValue: LiquidSpring(initial: store.roundStarted ? 1 : 0))
+    }
     var body: some View {
         ZStack(alignment: .topLeading) {
             CardSurface(palette: palette)
@@ -36,7 +45,15 @@ struct FocusRootView: View {
         .environment(\.locale, store.language.locale)
         .environment(\.colorScheme, store.dark ? .dark : .light)
         .padding(28)
-        .onAppear { taskText = store.task; synchronizeMedia(); updateFocus(initial:true); updateNavigation() }
+        .overlay(alignment: .top) {
+            WindowDragArea(onDragBegin: { presentation.beginDrag?() }, onDragUpdate: { presentation.updateDrag?($0) }, onDragEnd: { presentation.finishDrag?($0) }).frame(width: width, height: 18).padding(.top, 28)
+        }
+        .onAppear {
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { updateFocus(initial: true); updateNavigation() }
+            synchronizeMedia()
+        }
         .onChange(of: store.running) { _, _ in updateFocus(); synchronizeMedia() }
         .onChange(of: store.roundStarted) { _, started in if !started { liquid.setTarget(0,instant:store.reduceMotion || !store.windowVisible) }; synchronizeMedia() }
         .onChange(of: store.mediaResetID) { _, _ in synchronizeMedia(reset: true) }
@@ -54,7 +71,7 @@ struct FocusRootView: View {
     }
     private var mainScreen: some View {
         ZStack(alignment: .topLeading) {
-            CharacterView(media: media, dark: store.dark, reduced: store.reduceMotion)
+            CharacterView(media: media, dark: store.dark, reduced: store.reduceMotion || presentation.transition != nil)
                 .frame(width: 255.6, height: 340.8).scaleEffect(1 + 0.2 * focusProgress)
                 .position(x: 91.5 + 102.5 * focusProgress, y: 128.28 - 44.744 * focusProgress)
                 .animation(store.reduceMotion ? nil : layoutAnimation.delay(flowInterrupted ? 0 : store.running ? 0.11 : 0), value: focusProgress)
@@ -64,6 +81,7 @@ struct FocusRootView: View {
                 .modifier(PagePartMotion(timeline: navigation.timeline, namespace: "home", part: "clock"))
                 .modifier(ChromeMotion(visible: chromeVisible, index: 2, reduced: store.reduceMotion, interrupted: flowInterrupted))
             FocusClock(text:store.timeText,progress:focusProgress,color:palette.ink)
+                .opacity(presentation.transition == nil ? 1 : 0)
                 .accessibilityLabel(store.text("剩余 %d 分 %d 秒", store.remaining / 60, store.remaining % 60))
                 .animation(store.reduceMotion ? nil : layoutAnimation.delay(flowInterrupted ? 0 : store.running ? 0.135 : 0.015), value: focusProgress)
                 .modifier(PagePartMotion(timeline: navigation.timeline, namespace: "home", part: "clock"))
@@ -121,12 +139,15 @@ struct FocusRootView: View {
                 Spacer()
                 HStack(spacing: 7) {
                     QuietIconButton(name: "sound", label: store.sound ? store.text("关闭结束提示音") : store.text("开启结束提示音"), palette: palette, size: 24, height: 22, glyphSize: 14, buttonOpacity: store.sound ? 1 : 0.45, tooltip: store.sound ? store.text("结束时轻声提醒") : store.text("结束提示音已关闭"), foreground: palette.sub, customTooltip: true, reduceMotion: store.reduceMotion, focusID: "sound") { store.toggleSound() }
+                    Button { presentation.togglePin?() } label: {
+                        Image(systemName: presentation.pinned ? "pin.fill" : "pin").font(.system(size: 12)).foregroundStyle(presentation.pinned ? palette.accent : palette.sub).frame(width: 24, height: 22)
+                    }.buttonStyle(.plain).help(presentation.pinned ? store.text("取消窗口置顶") : store.text("窗口置顶")).accessibilityLabel(presentation.pinned ? store.text("取消窗口置顶") : store.text("窗口置顶"))
                     QuietIconButton(name: "moon", label: store.text("切换深浅色"), palette: palette, size: 24, height: 22, glyphSize: 14, foreground: palette.sub, focusID: "theme") { store.toggleTheme() }
                 }
             }.frame(height: 42)
         }
     }
-    private func synchronizeMedia(reset: Bool = false) { media.synchronize(kind: store.selected.kind, playing: store.running && store.screen == .focus && store.windowVisible && !store.reduceMotion, dark: store.dark, reset: reset) }
+    private func synchronizeMedia(reset: Bool = false) { media.synchronize(kind: store.selected.kind, playing: store.running && store.screen == .focus && store.windowVisible && !store.reduceMotion && presentation.transition == nil, dark: store.dark, reset: reset) }
     private func updateFocus(initial:Bool = false) {
         flowRevision += 1; let revision = flowRevision
         flowInterrupted = flowBusy; flowBusy = true

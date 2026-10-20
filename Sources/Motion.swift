@@ -169,7 +169,10 @@ enum WebChartProgress {
     private var timer: Timer?
     private let automatic: Bool
     private let clock: () -> Double
-    init(automatic: Bool = true, clock: @escaping () -> Double = { ProcessInfo.processInfo.systemUptime }) { self.automatic=automatic;self.clock=clock }
+    init(initial: Double = 0, automatic: Bool = true, clock: @escaping () -> Double = { ProcessInfo.processInfo.systemUptime }) {
+        self.automatic = automatic; self.clock = clock
+        position = initial; target = initial
+    }
     func setTarget(_ value: Double, instant: Bool = false) {
         if instant { target=value;position=value;velocity=0;timer?.invalidate();timer=nil;return }
         guard value != target else { return };target=value

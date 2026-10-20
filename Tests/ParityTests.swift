@@ -57,6 +57,10 @@ import CoreImage
         nav.update(to:.statistics,running:false,empty:true,reduced:false);advance(0.02)
         nav.update(to:.focus,running:false,empty:true,reduced:false);advance(0.29)
         check(!nav.settingsMounted && !nav.statisticsMounted && nav.homeVisible,"Escape Cmd2 then Cmd1 cancels pending statistics and clears settings")
+        let restoredSpring = LiquidSpring(initial: 1, automatic: false)
+        near(restoredSpring.position, 1, "restored timer controls start fully separated")
+        near(restoredSpring.target, 1, "restored control spring is already at its target")
+        near(restoredSpring.velocity, 0, "restored controls have no entrance motion")
         var springTime=300.0
         let spring=LiquidSpring(automatic:false,clock:{springTime});spring.setTarget(1)
         var referencePosition=0.0,referenceVelocity=0.0
@@ -108,6 +112,7 @@ import CoreImage
         near(CompletionEnvelope.gain(at:1.1),0.001,"WebAudio ramp target")
         near(CompletionEnvelope.gain(at:1.15),0.001,"WebAudio final hold")
         near(CompletionEnvelope.gain(at:1.2),0,"WebAudio stop")
+        try verifyWindowDragReadiness()
         let report:[String:Any]=["checks":checks,"geometry":["outer":[390,420],"content":[388,418],"contentOrigin":[1,1],"controlsWidth":336,"runningControlsCenterY":375,"settingsAnchor":[348.5,38]],"nativeTimeline":"matches HTML delays/durations/Bezier and interruption samples","liquid":"Gaussian3.6 -> alpha19a-9 -> SourceGraphic atop liquid, dark1px stroke" ]
         let data=try JSONSerialization.data(withJSONObject:report,options:[.prettyPrinted,.sortedKeys]);try data.write(to:URL(fileURLWithPath:CommandLine.arguments[1]))
         print("PASS: \(checks) fidelity checks: CSS timing, staged navigation, interruptions, JS spring, SVG liquid colors/stroke, chart progress, and sRGB alpha.")
@@ -122,4 +127,48 @@ import CoreImage
         let gray=1.09-1.18*(0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2])/255
         return alphas.enumerated().allSatisfy { i,a in abs(Int(out[i*4+3])-a)<=1 && abs(Int(out[i*4])-Int((gray*Double(a)).rounded()))<=2 }
     }
+    /// Dispatch only to our own offscreen view; no desktop input is synthesized.
+    static func verifyWindowDragReadiness() throws {
+        _ = NSApplication.shared
+        let area = CGRect(x: 0, y: 0, width: 1440, height: 900)
+        let window = NSWindow(contentRect: CGRect(x: 400, y: 200, width: 446, height: 476), styleMask: .borderless, backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        defer { window.contentView = nil; window.close() }
+        var proximity = WindowDockProximity(), ticks = 0, releases = 0, committed = false
+        var time = 0.0
+        let host = NSHostingView(rootView: WindowDragArea(onDragBegin: { proximity.reset() }, onDragUpdate: { _ in
+            time += 1
+            if proximity.update(frame: window.frame, area: area, margin: 28, now: time) { ticks += 1 }
+        }, onDragEnd: { moved in releases += 1; committed = moved && proximity.edge != nil }))
+        window.contentView = host
+        host.layoutSubtreeIfNeeded()
+        func findDragView(_ view: NSView) -> NSView? {
+            if String(describing: type(of: view)).contains("DragView") { return view }
+            return view.subviews.lazy.compactMap { findDragView($0) }.first
+        }
+        guard let view = findDragView(host) else { fatalError("Drag surface did not mount") }
+        func event(_ type: NSEvent.EventType, _ x: CGFloat) -> NSEvent {
+            NSEvent.mouseEvent(with: type, location: NSPoint(x: x, y: 400), modifierFlags: [], timestamp: time, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1)!
+        }
+        view.mouseDown(with: event(.leftMouseDown, 220))
+        view.mouseDragged(with: event(.leftMouseDragged, -328))
+        check(proximity.edge == .left && ticks == 1, "native overshoot arms edge feedback before mouse-up")
+        check(releases == 0 && !committed && window.frame.size == WindowDockGeometry.fullSize, "held drag keeps full mode without committing")
+        view.mouseDragged(with: event(.leftMouseDragged, 220))
+        check(ticks == 1, "native held drag does not repeat feedback")
+        view.mouseUp(with: event(.leftMouseUp, 220))
+        check(releases == 1 && committed, "release commits previously armed edge")
+        window.setFrameOrigin(NSPoint(x: 400, y: 200)); committed = false
+        view.mouseDown(with: event(.leftMouseDown, 220))
+        view.mouseDragged(with: event(.leftMouseDragged, -208))
+        view.mouseDragged(with: event(.leftMouseDragged, 368))
+        check(proximity.edge == nil, "native drag away cancels ready state while held")
+        view.mouseUp(with: event(.leftMouseUp, 220))
+        check(releases == 2 && !committed, "release after leaving edge does not dock")
+        window.setFrameOrigin(NSPoint(x: -28, y: 200))
+        view.mouseDown(with: event(.leftMouseDown, 220))
+        view.mouseUp(with: event(.leftMouseUp, 220))
+        check(releases == 3 && !committed, "clicking near edge never counts as a drag")
+    }
+
 }

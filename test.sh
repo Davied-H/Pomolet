@@ -6,6 +6,8 @@ swiftc -swift-version 5 -O "$project_root/Sources/Localization.swift" "$project_
 "$project_root/.build/native/core-tests"
 swiftc -swift-version 5 -O "$project_root/Sources/Localization.swift" "$project_root/Sources/Core.swift" "$project_root/Tests/LocalizationTests.swift" -o "$project_root/.build/native/localization-tests"
 "$project_root/.build/native/localization-tests" "$project_root/docs/localization-validation.json"
+swiftc -swift-version 5 -O "$project_root/Sources/WindowDockGeometry.swift" "$project_root/Tests/WindowDockTests.swift" -o "$project_root/.build/native/window-dock-tests"
+"$project_root/.build/native/window-dock-tests"
 sources=()
 for source in "$project_root"/Sources/*.swift; do
     [[ "$source" == */App.swift ]] || sources+=("$source")

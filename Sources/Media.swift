@@ -49,6 +49,10 @@ import CoreImage
             })
         }
     }
+    deinit {
+        observers.forEach { NotificationCenter.default.removeObserver($0) }
+        players.values.forEach { $0.pause() }
+    }
     func synchronize(kind: ModeKind, playing: Bool, dark: Bool, reset: Bool = false) {
         if self.dark != dark { self.dark = dark; applyAppearance() }
         if self.kind != kind || reset {

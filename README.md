@@ -7,6 +7,10 @@
 
 Pomolet pairs a quiet timer with an animated companion. Start a session and the interface makes room for focus: the toolbar and task field leave, the character grows, and a reset control separates from the pause button like a droplet.
 
+## Always on top & edge timer
+
+Use the footer pin or **Window → Always on Top** (⌘⌥P); the preference is saved. Drag the window near any screen's work-area edge and release to dock a compact 320 × 76pt timer with a transparent animated companion protruding above the bar, countdown, progress, play/pause, expand and pin controls. The compact timer follows the same pin preference. Drag its character or numbers away from the edge, click Expand, or press Escape to restore the full window and your previous pin preference, without interrupting the timer. Disable automatic docking under **Window → Snap to Screen Edges**. Docking respects the menu bar, Dock and connected displays; the app starts in full mode on relaunch.
+
 ## Demo
 
 [![Pomolet English demo — focus mode and native transitions](docs/media/pomolet-preview-en.gif)](https://github.com/Davied-H/Pomolet/releases/download/v1.2.0/pomolet-demo-en.mp4)
