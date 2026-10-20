@@ -2,6 +2,14 @@
 
 根据原始 HTML 原型重建的 SwiftUI / AppKit 应用，人物由 AVFoundation 播放，图表与水滴效果使用原生 Canvas。界面没有嵌入浏览器或 WebView，运行时无需启动 HTML 服务。
 
+## 展示视频
+
+[![Pomolet 展示：专注模式与原生转场](docs/media/pomolet-preview.gif)](https://github.com/Davied-H/Pomolet/blob/main/docs/media/pomolet-demo.mp4)
+
+[观看完整 54 秒展示视频](https://github.com/Davied-H/Pomolet/blob/main/docs/media/pomolet-demo.mp4) · [下载 MP4](https://github.com/Davied-H/Pomolet/releases/download/v1.0.1/pomolet-demo.mp4)
+
+原生 macOS 应用实录，60fps，展示专注、休息、数据统计、设置菜单和黑白主题。统计使用独立样例数据，不影响正式记录。
+
 ## 运行
 
 双击 `dist/Pomolet.app`。支持 macOS 14 或更新版本，包含 Apple Silicon 和 Intel 两种架构。

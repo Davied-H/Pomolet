@@ -7,6 +7,14 @@
 
 Pomolet pairs a quiet timer with an animated companion. Start a session and the interface makes room for focus: the toolbar and task field leave, the character grows, and a reset control separates from the pause button like a droplet.
 
+## Demo
+
+[![Pomolet demo — focus mode and native transitions](docs/media/pomolet-preview.gif)](https://github.com/Davied-H/Pomolet/blob/main/docs/media/pomolet-demo.mp4)
+
+[Watch the full 54-second video](https://github.com/Davied-H/Pomolet/blob/main/docs/media/pomolet-demo.mp4) · [Download MP4](https://github.com/Davied-H/Pomolet/releases/download/v1.0.1/pomolet-demo.mp4)
+
+Recorded from the native macOS app at 60fps. Includes focus, breaks, statistics, settings and dark appearance. Statistics use isolated sample data.
+
 ## Features
 
 - Up to five custom modes, with focus, short-break and long-break character animations.
