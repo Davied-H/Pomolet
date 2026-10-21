@@ -9,7 +9,7 @@ Pomolet pairs a quiet timer with an animated companion. Start a session and the 
 
 ## Always on top & edge timer
 
-Use the footer pin or **Window → Always on Top** (⌘⌥P); the preference is saved. Drag the window near any screen's work-area edge and release to dock a compact 320 × 76pt timer with a transparent animated companion protruding above the bar, countdown, progress, play/pause, expand and pin controls. The compact timer follows the same pin preference. Drag its character or numbers away from the edge, click Expand, or press Escape to restore the full window and your previous pin preference, without interrupting the timer. Disable automatic docking under **Window → Snap to Screen Edges**. Docking respects the menu bar, Dock and connected displays; the app starts in full mode on relaunch.
+Use the footer pin or **Window → Always on Top** (⌘⌥P); the preference is saved. Drag the window near any screen's work-area edge and release to dock a compact 320 × 76pt timer with a transparent animated companion protruding above the bar, countdown, play/pause, expand and pin controls. The compact timer follows the same pin preference. Drag its character or numbers away from the edge, click Expand, or press Escape to restore the full window and your previous pin preference, without interrupting the timer. Disable automatic docking under **Window → Snap to Screen Edges**. Docking respects the menu bar, Dock and connected displays; the app starts in full mode on relaunch.
 
 ## Demo
 

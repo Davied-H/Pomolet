@@ -37,7 +37,6 @@ struct CompactTimerView: View {
     @ObservedObject var presentation: WindowPresentation
     @StateObject private var media = CharacterPlayer()
     private var palette: Palette { Palette(dark: store.dark) }
-    private var progress: Double { min(1, max(0, 1 - Double(store.remaining) / Double(max(1, store.total)))) }
     var body: some View {
         ZStack(alignment: .topLeading) {
             timerBar.offset(x: WindowCompactLayout.body.minX, y: WindowCompactLayout.body.minY)
@@ -85,11 +84,6 @@ struct CompactTimerView: View {
         }
         .padding(.horizontal, 16).frame(width: WindowCompactLayout.body.width, height: WindowCompactLayout.body.height)
         .background(palette.paper, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(alignment: .bottomLeading) {
-            GeometryReader { proxy in
-                Rectangle().fill(palette.accent.opacity(0.65)).frame(width: proxy.size.width * progress, height: 2).frame(maxHeight: .infinity, alignment: .bottom)
-            }.clipShape(RoundedRectangle(cornerRadius: 18)).allowsHitTesting(false)
-        }
         .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(palette.line, lineWidth: 1).allowsHitTesting(false) }
         .shadow(color: .black.opacity(store.dark ? 0.25 : 0.12), radius: 4, y: 2)
     }

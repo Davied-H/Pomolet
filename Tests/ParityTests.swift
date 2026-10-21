@@ -113,6 +113,7 @@ import CoreImage
         near(CompletionEnvelope.gain(at:1.15),0.001,"WebAudio final hold")
         near(CompletionEnvelope.gain(at:1.2),0,"WebAudio stop")
         try verifyWindowDragReadiness()
+        try verifyMagneticCueHandoff()
         let report:[String:Any]=["checks":checks,"geometry":["outer":[390,420],"content":[388,418],"contentOrigin":[1,1],"controlsWidth":336,"runningControlsCenterY":375,"settingsAnchor":[348.5,38]],"nativeTimeline":"matches HTML delays/durations/Bezier and interruption samples","liquid":"Gaussian3.6 -> alpha19a-9 -> SourceGraphic atop liquid, dark1px stroke" ]
         let data=try JSONSerialization.data(withJSONObject:report,options:[.prettyPrinted,.sortedKeys]);try data.write(to:URL(fileURLWithPath:CommandLine.arguments[1]))
         print("PASS: \(checks) fidelity checks: CSS timing, staged navigation, interruptions, JS spring, SVG liquid colors/stroke, chart progress, and sRGB alpha.")
@@ -127,6 +128,62 @@ import CoreImage
         let gray=1.09-1.18*(0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2])/255
         return alphas.enumerated().allSatisfy { i,a in abs(Int(out[i*4+3])-a)<=1 && abs(Int(out[i*4])-Int((gray*Double(a)).rounded()))<=2 }
     }
+    /// Render only the readiness modifier, so any opaque pixel is cue residue.
+    static func verifyMagneticCueHandoff() throws {
+        _ = NSApplication.shared
+        let fixture = FileManager.default.temporaryDirectory.appendingPathComponent("pomolet-cue-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: fixture) }
+        let store = PomodoroStore(fileURL: fixture, startTicker: false)
+        let area = CGRect(x: 0, y: 0, width: 1440, height: 900)
+        for compact in [false, true] {
+            for edge in DockEdge.allCases {
+                let presentation = WindowPresentation()
+                presentation.compact = compact
+                presentation.proximityEdge = edge
+                presentation.pulseEdge = edge
+                presentation.proximityStrength = 1
+                let size = compact ? WindowCompactLayout.size : WindowDockGeometry.fullSize
+                let source = CGRect(origin: CGPoint(x: 400, y: 200), size: size)
+                let window = NSWindow(contentRect: source, styleMask: .borderless, backing: .buffered, defer: false)
+                window.isReleasedWhenClosed = false
+                window.isOpaque = false; window.backgroundColor = .clear
+                let host = NSHostingView(rootView: Color.clear.modifier(MagneticReadiness(store: store, presentation: presentation)))
+                window.contentView = host
+                defer { window.contentView = nil; window.close() }
+                func pixels(after delay: Double) -> (count: Int, x: Double, y: Double) {
+                    host.layoutSubtreeIfNeeded()
+                    RunLoop.main.run(until: Date().addingTimeInterval(delay))
+                    let bitmap = host.bitmapImageRepForCachingDisplay(in: host.bounds)!
+                    host.cacheDisplay(in: host.bounds, to: bitmap)
+                    var count = 0, xSum = 0.0, ySum = 0.0
+                    for y in 0..<bitmap.pixelsHigh {
+                        for x in 0..<bitmap.pixelsWide {
+                            if bitmap.colorAt(x: x, y: y)!.alphaComponent > 0.5 {
+                                count += 1; xSum += Double(x); ySum += Double(y)
+                            }
+                        }
+                    }
+                    return (count, xSum / Double(max(1, count)), ySum / Double(max(1, count)))
+                }
+                let before = pixels(after: 0.03)
+                check(before.count > 0, "ready cue renders on every edge and window size")
+                presentation.magneticPulse += 1
+                let pulse = pixels(after: 0.025)
+                check(abs(before.x - pulse.x) < 1 && abs(before.y - pulse.y) < 1, "handle stays anchored while the material pulses")
+                let target = WindowDockGeometry.docked(source, edge: edge, in: area)
+                let transition = WindowDockTransition(from: source, to: target, edge: edge, docking: true, workArea: area)
+                presentation.proximityEdge = nil
+                presentation.transition = transition
+                window.setFrame(transition.stage, display: false)
+                check(pixels(after: 0.01).count == 0, "no fading handle survives the switch to the morph canvas")
+                presentation.compact = true
+                presentation.transition = nil
+                window.setFrame(target, display: false)
+                check(pixels(after: 0.01).count == 0, "no handle reappears when the compact window takes over")
+            }
+        }
+    }
+
     /// Dispatch only to our own offscreen view; no desktop input is synthesized.
     static func verifyWindowDragReadiness() throws {
         _ = NSApplication.shared

@@ -126,7 +126,7 @@ struct FocusRootView: View {
         HStack(spacing: 9) {
             Glyph(name: "pencil", size: 14).foregroundStyle(taskFocused ? palette.accent : palette.sub)
             NativeField(text: $taskText, placeholder: store.text("点击输入本次专注事项（可选）"), label: store.text("当前专注任务"), fontSize: 11, color: NSColor(palette.ink), placeholderColor: NSColor(palette.sub), focusID: "task", onValue: { store.saveTask($0) }, onFocus: { taskFocused = $0 })
-        }.padding(.horizontal, 2).overlay(alignment: .bottom) { Rectangle().fill(taskFocused ? palette.accent : palette.line).frame(height: 1) }
+        }.padding(.horizontal, 2)
             .animation(store.reduceMotion ? nil : .easeOut(duration: 0.18), value: taskFocused)
     }
     private var footer: some View {
