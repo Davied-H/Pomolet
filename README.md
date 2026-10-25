@@ -92,3 +92,7 @@ Preferences and history stay on your Mac in `~/Library/Application Support/Focus
 ## License
 
 [MIT](LICENSE). Contributions are welcome.
+
+### App updates
+
+From v1.4.0, Pomolet automatically checks for updates, downloads them, and installs on quit using Sparkle. Use **Pomolet → Check for Updates…** for a manual check; both automatic settings can be toggled in the same menu. Older versions need a one-time manual install. See [release and signing instructions](docs/UPDATES.md).

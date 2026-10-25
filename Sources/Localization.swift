@@ -34,6 +34,9 @@ enum LanguagePreference: String, Codable, CaseIterable {
 /// Keep user-authored content outside this catalog.
 enum Localizations {
     static let english: [String: String] = [
+        "检查更新…": "Check for Updates…",
+        "自动检查更新": "Automatically Check for Updates",
+        "自动下载并安装更新": "Automatically Download and Install Updates",
         "窗口置顶": "Always on Top",
         "取消窗口置顶": "Turn Off Always on Top",
         "展开完整窗口": "Expand Window",

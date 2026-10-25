@@ -1,8 +1,9 @@
 import SwiftUI
 import AppKit
 import Combine
+import Sparkle
 
-@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuItemValidation {
     let store: PomodoroStore
     override init() {
         if let fixture = Bundle.main.object(forInfoDictionaryKey: "FocusFixturePath") as? String,
@@ -11,6 +12,7 @@ import Combine
         } else { store = PomodoroStore() }
         super.init()
     }
+    private var updaterController: SPUStandardUpdaterController?
     private let chime = CompletionChime()
     private var window: NSWindow!
     private let presentation = WindowPresentation()
@@ -32,6 +34,9 @@ import Combine
     private var languageObserver: AnyCancellable?
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
+        if Bundle.main.bundleIdentifier == "com.dong.focusnative" {
+            updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        }
         buildMenu()
         languageObserver = store.$language.dropFirst().sink { [weak self] _ in
             DispatchQueue.main.async { self?.buildMenu() }
@@ -282,6 +287,16 @@ import Combine
         func item(_ title: String, action: Selector?, key: String = "", target: AnyObject? = nil) -> NSMenuItem { let item = NSMenuItem(title: title, action: action, keyEquivalent: key); item.target = target; return item }
         func submenu(_ title: String, _ menu: NSMenu) { let top = NSMenuItem(title: title, action: nil, keyEquivalent: ""); top.submenu = menu; bar.addItem(top) }
         appMenu.addItem(item(store.text("关于Pomolet"), action: #selector(about), target: self)); appMenu.addItem(.separator())
+        if let controller = updaterController {
+            appMenu.addItem(item(store.text("检查更新…"), action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), target: controller))
+            let automatic = item(store.text("自动检查更新"), action: #selector(toggleAutomaticChecks(_:)), target: self)
+            automatic.state = controller.updater.automaticallyChecksForUpdates ? .on : .off
+            appMenu.addItem(automatic)
+            let install = item(store.text("自动下载并安装更新"), action: #selector(toggleAutomaticDownloads(_:)), target: self)
+            install.state = controller.updater.automaticallyDownloadsUpdates ? .on : .off
+            appMenu.addItem(install)
+            appMenu.addItem(.separator())
+        }
         appMenu.addItem(item(store.text("设置…"), action: #selector(openSettings), key: ",", target: self)); appMenu.addItem(.separator())
         appMenu.addItem(item(store.text("隐藏Pomolet"), action: #selector(NSApplication.hide(_:)), key: "h")); appMenu.addItem(item(store.text("显示全部"), action: #selector(NSApplication.unhideAllApplications(_:))))
         appMenu.addItem(.separator()); appMenu.addItem(item(store.text("退出Pomolet"), action: #selector(NSApplication.terminate(_:)), key: "q"))
@@ -300,6 +315,24 @@ import Combine
         windowMenu.addItem(item(store.text("最小化"), action: #selector(NSWindow.miniaturize(_:)), key: "m")); windowMenu.addItem(item(store.text("显示主窗口"), action: #selector(showWindow), key: "0", target: self))
         submenu("Pomolet", appMenu); submenu(store.text("文件"), fileMenu); submenu(store.text("编辑"), editMenu); submenu(store.text("显示"), viewMenu); submenu(store.text("窗口"), windowMenu)
         NSApp.mainMenu = bar; NSApp.windowsMenu = windowMenu
+    }
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(toggleAutomaticChecks(_:)) {
+            menuItem.state = updaterController?.updater.automaticallyChecksForUpdates == true ? .on : .off
+        } else if menuItem.action == #selector(toggleAutomaticDownloads(_:)) {
+            menuItem.state = updaterController?.updater.automaticallyDownloadsUpdates == true ? .on : .off
+        }
+        return true
+    }
+    @objc private func toggleAutomaticChecks(_ sender: NSMenuItem) {
+        guard let updater = updaterController?.updater else { return }
+        updater.automaticallyChecksForUpdates.toggle()
+        sender.state = updater.automaticallyChecksForUpdates ? .on : .off
+    }
+    @objc private func toggleAutomaticDownloads(_ sender: NSMenuItem) {
+        guard let updater = updaterController?.updater else { return }
+        updater.automaticallyDownloadsUpdates.toggle()
+        sender.state = updater.automaticallyDownloadsUpdates ? .on : .off
     }
     @objc private func about() { NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Pomolet", .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2.0", .credits: NSAttributedString(string: store.text("专注于眼前这一件事。\n原生 macOS · SwiftUI / AppKit"))]) }
     @objc private func expandFromMenu() { expandWindow() }

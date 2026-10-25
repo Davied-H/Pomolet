@@ -1,0 +1,7 @@
+# Pomolet 个性化应用图标
+
+使用内置 image_gen，基于用户提供的绿色耳机角色生成。原稿为 `pomolet-master.png`；运行 `swift Tools/GenerateIcon.swift` 导出 1024px 的 `pomolet.png` 和包含 16–1024px 多尺寸的 `Resources/AppIcon.icns`。`pomolet.svg` 保留为旧版标志，不是当前图标源文件。
+
+## 生成提示词
+
+Use case: logo-brand. Create a polished personalized macOS app icon for Pomolet, a focus / Pomodoro timer, using the attached image as the character identity reference. Preserve the distinctive left-facing cartoon head, messy short white spiky hair, round black glasses, large emerald green headphones, long rounded nose and relaxed focused expression. Simplify into confident thick black hand-drawn outlines with clean ivory fills, no halftone noise. Close-up head and upper shoulders, very legible at small icon sizes, centered optically. A warm ivory rounded-square macOS tile occupies about 84% of the square canvas with transparent exterior and generous consistent margins. Character comfortably fits inside tile. Emerald headphones are the main color accent; integrate a tiny simple cream clock hand motif within the green circular earcup to evoke focus timer, no numbers. Premium friendly indie productivity app identity. Flat editorial cartoon, subtle tile depth only, no photorealism. One icon only, square 1024x1024 canvas, no text, no labels, no presentation board, no extra objects. Keep the character recognizably faithful to the supplied IP, not a generic mascot.

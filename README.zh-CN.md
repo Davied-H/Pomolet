@@ -90,3 +90,7 @@
 `test.sh` 覆盖 45 个原生功能断言，包括计时、暂停 / 重置、自动保存、五模式上限、四轮长休息、历史、退出恢复、统计和损坏数据。另有50项保真检查覆盖 CSS 时序、分组进退场、快速反向、弹簧积分、SVG 滤镜、图表曲线和 sRGB/Alpha 的保真断言，结果位于 `docs/parity-validation.json`。AVFoundation 解码验证覆盖六段视频的帧率、尺寸与透明通道，结果位于 `docs/media-validation.json`。
 
 另有实际原生应用的主界面、沉浸状态、设置、菜单、统计和主题操作检查；检查记录位于 `docs/VALIDATION.md`。Intel 架构已编译，运行检查在本机 Apple Silicon 上完成。
+
+### 应用更新
+
+从 v1.4.0 起，Pomolet 默认自动检查、下载更新并在退出时安装。在 **Pomolet → 检查更新…** 可手动检测；同一菜单可开关自动检查和自动下载安装。旧版需手动安装一次新版。详见[更新与发布说明](docs/UPDATES.md)。
