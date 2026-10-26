@@ -348,3 +348,30 @@
 - 验证：45功能、339国际化、574几何动效、92保真及六段透明视频检查通过；arm64/x86_64双架构、版本元数据和ad-hoc签名验证通过。
 - 产物：dist/Pomolet-macOS-v1.3.1.zip；未做Developer ID公证，物理多屏与触感未实测。
 - 下一步：提交推送后发布GitHub Release v1.3.1，以上传包为下载产物。
+
+## 2026-10-22 07:01｜Reddit 首次每日推广检查
+- 状态：检查完成，推广受阻；未新增发帖或回复。
+- 结果：已读取六份已提交推广资料，核对三社区规则、近期同类帖、账号通知与已有Pomolet帖。opensource帖1xayowb因karma不足被自动删除；productivity禁止所有自推广；macapps需10本地karma、资格与审批（账号资格尚未确认）。三者均记录blocked，条件变化前不重试。
+- 验证：v1.3.0正式Release与ZIP正常；最新正式版已是v1.3.1。未见需要回复的真人反馈，唯一Pomolet评论为AutoModerator。
+- 记录：/Users/dong/.codex/automations/pomolet-reddit-daily-promotion-check-2/2026-10-22.md；自动化memory.md已写入持久阻断和反馈基线。
+- 下一步：等待可验证的资格/规则变化；恢复推广前确认是否把文案升级为v1.3.1，不刷karma或改写绕过限制。
+
+## 2026-10-25｜角色 IP 个性化应用图标
+- 状态：已完成项目图标资源更新。
+- 结果：基于用户提供的绿色耳机角色使用内置 image_gen 生成图标；保留圆眼镜、蓬松头发，耳罩加入时钟指针。原稿及提示词存于 Brand/pomolet-master.png、Brand/ICON.md。
+- 接入：更新 Brand/pomolet.png、Resources/AppIcon.icns 和 Tools/GenerateIcon.swift，后续可从原稿重复导出。
+- 验证：生成脚本成功；PNG 为 1024×1024 且含透明通道；icns 可成功解包。未重新构建或安装应用，未实测 Dock 显示。
+- 下一步：无；需查看实际 Dock 效果时重新打包安装。
+
+## 2026-10-25｜v1.4.0 发布、自动更新与本机安装
+- 状态：已发布并安装；提交 9d11d90 已推送 main，GitHub Latest 为 v1.4.0。
+- 结果：发布新角色图标；接入 Sparkle 2.10.0，默认自动检查、下载并退出时安装，菜单提供手动检查及两个开关。新增可重复打包、签名流程与发布说明。
+- 安全：更新包和 appcast 均使用 EdDSA 签名，解压前验证，强制签名更新源；私钥仅保存在本机登录钥匙串 Pomolet account。应用仍为 ad-hoc 签名，未公证。
+- 验证：45 核心、348 国际化、574 吸附、92 保真和六段视频检查通过，双架构构建、bundle 签名通过；线上更新源签名通过，安装包 SHA-256 与 GitHub digest 一致。实际点击检查更新，显示“Pomolet 1.4.0 是当前的最新版本”。未验证跨版本自动安装或物理 Intel 运行。
+- 安装：/Applications/Pomolet.app 已更新并启动，计时与设置保留；旧版 v1.3.0 和状态文件备份在 .build/install-backup-v1.4.0/。
+- 发布：https://github.com/Davied-H/Pomolet/releases/tag/v1.4.0
+- 下一步：后续发布沿用钥匙串中的签名密钥，上传安装包与签名 appcast，并验证跨版本更新。
+
+## 2026-10-25｜删除本次安装备份
+- 按用户要求删除 .build/install-backup-v1.4.0/（旧版应用和安装前状态副本）；上条记录中的备份路径已不再存在。
+- 已确认备份目录删除，当前 /Applications/Pomolet.app 仍为 v1.4.0，正在使用的状态文件保留。
